@@ -9,10 +9,10 @@ export default async function Home() {
     return (
       <main>
         <a href="/auth/login?screen_hint=signup">
-          <button className="btn">Sign up</button>
+          <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Sign up</button>
         </a>
         <a href="/auth/login">
-          <button className="btn">Log in</button>
+          <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Log in</button>
         </a>
       </main>
     );
@@ -23,8 +23,8 @@ export default async function Home() {
       <h1>Welcome, {session.user.name}!</h1>
       <p>
         <a href="/auth/logout">
-          <button className="btn">Log out</button>
-        </a>
+          <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Log out</button>
+        </a>        
       </p>
     </main>
   );
