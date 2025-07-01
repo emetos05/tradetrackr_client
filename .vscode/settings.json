@@ -1,0 +1,9 @@
+{
+    "chat.mcp.serverSampling": {
+        "tradetrackr.client/.vscode/mcp.json: github-mcp-server-04be239d": {
+            "allowedModels": [
+                "github.copilot-chat/gpt-4.1"
+            ]
+        }
+    }
+}
