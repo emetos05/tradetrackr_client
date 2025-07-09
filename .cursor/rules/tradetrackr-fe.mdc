@@ -1,6 +1,7 @@
 ---
 description: "Next.js + Tailwind development standards and instructions"
-applyTo: '**/\*.tsx, **/_.ts, \*\*/_.jsx, **/\*.js, **/\*.css'
+globs:
+alwaysApply: true
 ---
 
 # Next.js + Tailwind Development Instructions

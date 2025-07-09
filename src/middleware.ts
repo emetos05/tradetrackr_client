@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth0 } from "@/lib/auth0";
+import { auth0 } from "@/app/lib/auth0";
 
 export async function middleware(request: NextRequest) {
   const authRes = await auth0.middleware(request);
@@ -17,8 +17,18 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  // the headers from the auth middleware should always be returned
-  return authRes;
+  const { token } = await auth0.getAccessToken(request, authRes);
+
+  const response = authRes;
+  if (token) {
+    response.cookies.set("access_token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+    });
+  }
+  return response;
 }
 
 export const config = {
