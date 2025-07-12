@@ -1,0 +1,120 @@
+.navbar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(255,255,255,0.8);
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.04);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(4px);
+}
+@media (prefers-color-scheme: dark) {
+  .navbar {
+    background: rgba(17,24,39,0.8);
+  }
+}
+.left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.brand {
+  font-weight: bold;
+  font-size: 1.125rem;
+  color: #1d4ed8;
+}
+@media (prefers-color-scheme: dark) {
+  .brand {
+    color: #7dd3fc;
+  }
+}
+.dashboardLink {
+  margin-left: 0.5rem;
+  color: #374151;
+  text-decoration: none;
+  transition: text-decoration 0.2s;
+}
+.dashboardLink:hover {
+  text-decoration: underline;
+}
+@media (prefers-color-scheme: dark) {
+  .dashboardLink {
+    color: #e5e7eb;
+  }
+}
+.active {
+  font-weight: 600;
+}
+.searchInput {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  color: #111827;
+  outline: none;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.searchInput:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px #60a5fa33;
+}
+@media (prefers-color-scheme: dark) {
+  .searchInput {
+    border-color: #374151;
+    background: #1f2937;
+    color: #f3f4f6;
+  }
+}
+.loginBtn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 500;
+  transition: background 0.2s;
+  text-decoration: none;
+}
+.loginBtn:hover {
+  background: #1d4ed8;
+}
+.signupBtn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  background: #e5e7eb;
+  color: #2563eb;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+  text-decoration: none;
+}
+.signupBtn:hover {
+  background: #dbeafe;
+}
+@media (prefers-color-scheme: dark) {
+  .signupBtn {
+    background: #1f2937;
+    color: #7dd3fc;
+  }
+  .signupBtn:hover {
+    background: #374151;
+  }
+}
+.logoutBtn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  background: #dc2626;
+  color: #fff;
+  font-weight: 500;
+  transition: background 0.2s;
+  text-decoration: none;
+}
+.logoutBtn:hover {
+  background: #b91c1c;
+} 

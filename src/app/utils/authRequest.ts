@@ -24,7 +24,16 @@ export async function authRequest(endpoint: string, options: RequestInit = {}) {
       } catch {}
       throw new Error(message);
     }
-    return res.json();
+    // Fix: Only parse JSON if there is content
+    const contentLength = res.headers.get("content-length");
+    if (res.status === 204 || contentLength === "0") {
+      return null;
+    }
+    const text = await res.text();
+    if (!text) {
+      return null;
+    }
+    return JSON.parse(text);
   } catch (error: any) {
     console.error("Error in authRequest:", error);
     throw new Error(

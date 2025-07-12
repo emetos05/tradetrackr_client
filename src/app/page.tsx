@@ -1,23 +1,18 @@
 // import { auth0 } from "@/app/lib/auth0";
 import "./globals.css";
 
-export default async function Home() {
+export default function Home() {
   return (
-    <main>
-      <a href="/auth/login?screen_hint=signup">
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Sign up
-        </button>
-      </a>
-      <a href="/auth/login?returnTo=/dashboard">
-        <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-          Log in
-        </button>
-      </a>
-      <br />
-      <br />
-      <h1>Welcome, to Tradetrackr!</h1>
-      <p>Track your jobs and invoices with ease.</p>
+    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-b from-gray-50 to-gray-200 dark:from-gray-900 dark:to-gray-800">
+      <div className="max-w-lg w-full flex flex-col items-center gap-8">
+        <h1 className="text-4xl font-bold text-center text-gray-900 dark:text-gray-100">
+          Welcome to Trade Tracker
+        </h1>
+        <p className="text-lg text-center text-gray-600 dark:text-gray-300">
+          Track your clients, jobs, and invoices with ease. Please log in to
+          continue.
+        </p>
+      </div>
     </main>
   );
 }
