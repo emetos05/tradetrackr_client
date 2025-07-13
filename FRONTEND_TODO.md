@@ -6,7 +6,7 @@
   - Use Supabase and/or Auth0
   - Manage user sessions
 
-- [ ] **Job Management CRUD**
+- [x] **Job Management CRUD**
 
   - Implement Create, Read, Update, Delete for jobs
   - Add validation and UI polish
