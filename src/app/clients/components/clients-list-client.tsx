@@ -25,6 +25,11 @@ export const ClientsListClient = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const reload = async () => {
+    const latest = await getClients();
+    setClients(latest);
+  };
+
   // Debounced search
   const filtered = clients.filter((client) => {
     const q = search.toLowerCase();
@@ -41,9 +46,9 @@ export const ClientsListClient = ({
     setError(null);
     try {
       await createClient(data);
-      const updated = await getClients();
-      setClients(updated);
+      await reload();
       setShowForm(false);
+      setEditClient(null);
     } catch (err: any) {
       setError(err.message || "Failed to create client");
     } finally {
@@ -56,8 +61,7 @@ export const ClientsListClient = ({
     setError(null);
     try {
       await updateClient(id, data);
-      const updated = await getClients();
-      setClients(updated);
+      await reload();
       setEditClient(null);
       setShowForm(false);
     } catch (err: any) {
@@ -72,8 +76,7 @@ export const ClientsListClient = ({
     setError(null);
     try {
       await deleteClient(id);
-      const updated = await getClients();
-      setClients(updated);
+      await reload();
     } catch (err: any) {
       setError(err.message || "Failed to delete client");
     } finally {
@@ -106,7 +109,7 @@ export const ClientsListClient = ({
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg w-full max-w-md relative">
             <ClientForm
-              initial={editClient || {}}
+              initialClient={editClient || {}}
               onSubmit={async (data) => {
                 if (editClient && editClient.id) {
                   await handleEdit(editClient.id, data);

@@ -48,6 +48,15 @@ export default function Nav({ isAuthenticated = false }: NavProps) {
             >
               Jobs
             </Link>
+            <Link
+              href="/invoices"
+              className={
+                styles.dashboardLink +
+                (pathname === "/invoices" ? " " + styles.active : "")
+              }
+            >
+              Invoices
+            </Link>
           </>
         )}
       </div>

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Job, JobStatus } from "../types/job";
+import { Client } from "@/app/clients/types/client";
 import { JobForm } from "./job-form";
 import { JobActions } from "./job-actions";
 import { Button } from "@/app/components/ui/button";
@@ -15,6 +16,7 @@ import {
 
 interface JobsListClientProps {
   initialJobs: Job[];
+  clients: Client[];
 }
 
 // Helper to get status label
@@ -48,30 +50,27 @@ const buildJobPayload = (data: Omit<Job, "id">): JobDto => ({
   materialCost: data.materialCost,
 });
 
-export const JobsListClient = ({ initialJobs }: JobsListClientProps) => {
+export const JobsListClient = ({
+  initialJobs,
+  clients,
+}: JobsListClientProps) => {
   const [jobs, setJobs] = useState<Job[]>(initialJobs);
   const [showForm, setShowForm] = useState(false);
   const [editJob, setEditJob] = useState<Job | null>(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [clientOptions, setClientOptions] = useState<
-    { id: string; name: string }[]
-  >([]);
 
   // Helper to get client name by ID (now inside component)
   const getClientName = (clientId: string) => {
-    const client = clientOptions.find(
-      (c: { id: string; name: string }) => c.id === clientId
-    );
+    const client = clients.find((c) => c.id === clientId);
     return client ? client.name : "Unknown Client";
   };
 
-  useEffect(() => {
-    getClients().then((clients) => {
-      setClientOptions(clients.map((c) => ({ id: c.id!, name: c.name })));
-    });
-  }, []);
+  const reload = async () => {
+    const latest = await getJobs();
+    setJobs(latest);
+  };
 
   const filtered = jobs.filter((job) => {
     const q = search.toLowerCase();
@@ -82,11 +81,11 @@ export const JobsListClient = ({ initialJobs }: JobsListClientProps) => {
     );
   });
 
-  const toISODateTime = (date: string | undefined) => {
-    if (!date) return undefined;
-    if (date.length > 10) return date;
-    return new Date(date).toISOString();
-  };
+  //   const toISODateTime = (date: string | undefined) => {
+  //     if (!date) return undefined;
+  //     if (date.length > 10) return date;
+  //     return new Date(date).toISOString();
+  //   };
 
   const handleCreate = async (data: Omit<Job, "id">) => {
     setLoading(true);
@@ -99,8 +98,7 @@ export const JobsListClient = ({ initialJobs }: JobsListClientProps) => {
           completedAt: data.completedAt ?? null,
         })
       );
-      const latestJobs = await getJobs();
-      setJobs(latestJobs);
+      await reload();
       setShowForm(false);
       setEditJob(null);
     } catch (err: any) {
@@ -122,8 +120,7 @@ export const JobsListClient = ({ initialJobs }: JobsListClientProps) => {
           completedAt: data.completedAt ?? null,
         })
       );
-      const latestJobs = await getJobs();
-      setJobs(latestJobs);
+      await reload();
       setShowForm(false);
       setEditJob(null);
     } catch (err: any) {
@@ -138,8 +135,7 @@ export const JobsListClient = ({ initialJobs }: JobsListClientProps) => {
     setError(null);
     try {
       await deleteJob(id);
-      const latestJobs = await getJobs();
-      setJobs(latestJobs);
+      await reload();
     } catch (err: any) {
       setError(err.message || "Failed to delete job");
     } finally {
@@ -172,8 +168,8 @@ export const JobsListClient = ({ initialJobs }: JobsListClientProps) => {
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg w-full max-w-md relative">
             <JobForm
-              initial={editJob || {}}
-              clientOptions={clientOptions}
+              initialJob={editJob || {}}
+              clients={clients}
               onSubmit={async (data) => {
                 if (editJob && editJob.id) {
                   // Ensure createdAt is present for handleEdit

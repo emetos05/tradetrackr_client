@@ -13,7 +13,7 @@
   - Use server/client component separation
   - Match backend API spec
 
-- [ ] **Invoice Management CRUD**
+- [x] **Invoice Management CRUD**
 
   - Implement Create, Read, Update, Delete for invoices
   - Add validation and UI polish

@@ -2,6 +2,7 @@
 import { Button } from "@/app/components/ui/button";
 import { useState, useRef, useEffect } from "react";
 import { Job, JobStatus } from "../types/job";
+import { Client } from "@/app/clients/types/client";
 import { z } from "zod";
 
 const jobSchema = z.object({
@@ -19,30 +20,30 @@ const jobSchema = z.object({
 type JobFormData = z.infer<typeof jobSchema>;
 
 interface JobFormProps {
-  initial?: Partial<Job>;
+  initialJob?: Partial<Job>;
+  clients: Client[];
   onSubmit: (job: Omit<Job, "id">) => Promise<void>;
   onCancel?: () => void;
   title?: string;
-  clientOptions: { id: string; name: string }[];
 }
 
 export const JobForm = ({
-  initial = {},
+  initialJob = {},
+  clients,
   onSubmit,
   onCancel,
   title = "Job Details",
-  clientOptions,
 }: JobFormProps) => {
   const [form, setForm] = useState<JobFormData>({
-    clientId: initial.clientId || (clientOptions[0]?.id ?? ""),
-    title: initial.title || "",
-    description: initial.description || "",
-    status: initial.status ?? JobStatus.NotStarted,
-    createdAt: initial.createdAt || new Date().toISOString(),
-    completedAt: initial.completedAt || undefined,
-    hourlyRate: initial.hourlyRate ?? 0,
-    hoursWorked: initial.hoursWorked ?? 0,
-    materialCost: initial.materialCost ?? 0,
+    clientId: initialJob.clientId || "",
+    title: initialJob.title || "",
+    description: initialJob.description || "",
+    status: initialJob.status ?? JobStatus.NotStarted,
+    createdAt: initialJob.createdAt || new Date().toISOString(),
+    completedAt: initialJob.completedAt || undefined,
+    hourlyRate: initialJob.hourlyRate ?? 0,
+    hoursWorked: initialJob.hoursWorked ?? 0,
+    materialCost: initialJob.materialCost ?? 0,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState<string | null>(null);
@@ -161,7 +162,7 @@ export const JobForm = ({
           aria-invalid={!!fieldErrors.clientId}
           aria-describedby={fieldErrors.clientId ? "clientId-error" : undefined}
         >
-          {clientOptions.map((c) => (
+          {clients.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>

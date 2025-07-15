@@ -14,23 +14,23 @@ const clientSchema = z.object({
 type ClientFormData = z.infer<typeof clientSchema>;
 
 interface ClientFormProps {
-  initial?: Partial<Client>;
+  initialClient?: Partial<Client>;
   onSubmit: (client: Omit<Client, "id">) => Promise<void>;
   onCancel?: () => void;
   title?: string;
 }
 
 export const ClientForm = ({
-  initial = {},
+  initialClient = {},
   onSubmit,
   onCancel,
   title = "Client Details",
 }: ClientFormProps) => {
   const [form, setForm] = useState<ClientFormData>({
-    name: initial.name || "",
-    email: initial.email || "",
-    phone: initial.phone || "",
-    address: initial.address || "",
+    name: initialClient.name || "",
+    email: initialClient.email || "",
+    phone: initialClient.phone || "",
+    address: initialClient.address || "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState<string | null>(null);
