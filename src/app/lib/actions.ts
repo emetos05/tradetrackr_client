@@ -38,7 +38,7 @@ export async function getJobs(): Promise<Job[]> {
 }
 
 // Add JobDto type for API payloads
-export type JobDto = Omit<Job, "id"> & { completedAt: string | null };
+export type JobDto = Omit<Job, "id">;
 
 export async function createJob(job: JobDto): Promise<void> {
   await authRequest("Jobs", {

@@ -9,6 +9,7 @@ const clientSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone: z.string().min(1, "Phone is required"),
   address: z.string().min(1, "Address is required"),
+  createdAt: z.string().optional(),
 });
 
 type ClientFormData = z.infer<typeof clientSchema>;
@@ -31,6 +32,7 @@ export const ClientForm = ({
     email: initialClient.email || "",
     phone: initialClient.phone || "",
     address: initialClient.address || "",
+    createdAt: initialClient.createdAt || new Date().toISOString(),
   });
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState<string | null>(null);
@@ -79,7 +81,17 @@ export const ClientForm = ({
       return;
     }
     try {
-      await onSubmit(result.data);
+      // Only send API-required fields, convert dates to ISO
+      const payload = {
+        name: result.data.name,
+        email: result.data.email,
+        phone: result.data.phone,
+        address: result.data.address,
+        createdAt: result.data.createdAt
+          ? new Date(result.data.createdAt).toISOString()
+          : "",
+      };
+      await onSubmit(payload as Omit<Client, "id">);
     } catch (err: any) {
       setHasError(err.message || "Error");
     } finally {

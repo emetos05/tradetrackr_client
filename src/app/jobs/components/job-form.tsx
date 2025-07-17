@@ -35,12 +35,14 @@ export const JobForm = ({
   title = "Job Details",
 }: JobFormProps) => {
   const [form, setForm] = useState<JobFormData>({
-    clientId: initialJob.clientId || "",
+    clientId: initialJob?.clientId || "",
     title: initialJob.title || "",
     description: initialJob.description || "",
     status: initialJob.status ?? JobStatus.NotStarted,
-    createdAt: initialJob.createdAt || new Date().toISOString(),
-    completedAt: initialJob.completedAt || undefined,
+    createdAt: initialJob.createdAt ? initialJob.createdAt.slice(0, 10) : "",
+    completedAt: initialJob.completedAt
+      ? initialJob.completedAt.slice(0, 10)
+      : "",
     hourlyRate: initialJob.hourlyRate ?? 0,
     hoursWorked: initialJob.hoursWorked ?? 0,
     materialCost: initialJob.materialCost ?? 0,
@@ -81,14 +83,6 @@ export const JobForm = ({
     setFieldErrors((prev) => ({ ...prev, [e.target.name]: undefined }));
   };
 
-  const toISODateTime = (date: string) => {
-    if (!date) return undefined;
-    // If already ISO, return as is
-    if (date.length > 10) return date;
-    // Convert YYYY-MM-DD to ISO string (midnight UTC)
-    return new Date(date).toISOString();
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -112,10 +106,12 @@ export const JobForm = ({
         title: result.data.title,
         description: result.data.description,
         status: result.data.status,
-        createdAt: toISODateTime(result.data.createdAt || ""),
+        createdAt: result.data.createdAt
+          ? new Date(result.data.createdAt).toISOString()
+          : "",
         completedAt: result.data.completedAt
-          ? toISODateTime(result.data.completedAt)
-          : undefined,
+          ? new Date(result.data.completedAt).toISOString()
+          : "",
         hourlyRate: result.data.hourlyRate,
         hoursWorked: result.data.hoursWorked,
         materialCost: result.data.materialCost,
@@ -162,6 +158,7 @@ export const JobForm = ({
           aria-invalid={!!fieldErrors.clientId}
           aria-describedby={fieldErrors.clientId ? "clientId-error" : undefined}
         >
+          <option value="">Select a Client</option>
           {clients.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -282,7 +279,7 @@ export const JobForm = ({
           id="createdAt"
           name="createdAt"
           type="date"
-          value={form.createdAt?.slice(0, 10) || ""}
+          value={form.createdAt || ""}
           onChange={(e) =>
             setForm((f) => ({ ...f, createdAt: e.target.value }))
           }
@@ -309,13 +306,13 @@ export const JobForm = ({
           htmlFor="completedAt"
           className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
         >
-          End Date
+          Completed Date
         </label>
         <input
           id="completedAt"
           name="completedAt"
           type="date"
-          value={form.completedAt?.slice(0, 10) || ""}
+          value={form.completedAt || ""}
           onChange={(e) =>
             setForm((f) => ({ ...f, completedAt: e.target.value }))
           }
@@ -350,7 +347,7 @@ export const JobForm = ({
           min={0}
           step={0.01}
           placeholder="e.g. 50"
-          value={form.hourlyRate}
+          value={form.hourlyRate || ""}
           onChange={handleNumberChange}
           className={`input input-bordered w-full ${
             fieldErrors.hourlyRate
@@ -384,7 +381,7 @@ export const JobForm = ({
           min={0}
           step={0.5}
           placeholder="e.g. 40"
-          value={form.hoursWorked}
+          value={form.hoursWorked || ""}
           onChange={handleNumberChange}
           className={`input input-bordered w-full ${
             fieldErrors.hoursWorked
@@ -418,7 +415,7 @@ export const JobForm = ({
           min={0}
           step={0.01}
           placeholder="e.g. 500"
-          value={form.materialCost}
+          value={form.materialCost || ""}
           onChange={handleNumberChange}
           className={`input input-bordered w-full ${
             fieldErrors.materialCost

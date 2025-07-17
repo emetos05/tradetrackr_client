@@ -20,7 +20,7 @@
   - Use server/client component separation
   - Match backend API spec
 
-- [ ] **Dashboard Page**
+- [x] **Dashboard Page**
 
   - Add summary widgets (total clients, jobs, invoices, outstanding balances)
   - Add recent activity feed

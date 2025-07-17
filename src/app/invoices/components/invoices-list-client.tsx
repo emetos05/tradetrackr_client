@@ -79,8 +79,8 @@ export function InvoicesListClient({
     try {
       await createInvoice({
         ...data,
-        issueDate: data.issueDate || new Date().toISOString(),
-        dueDate: data.dueDate || new Date().toISOString(),
+        issueDate: new Date(data.issueDate).toISOString(),
+        dueDate: new Date(data.dueDate).toISOString(),
       });
       await reload();
       setShowForm(false);
@@ -98,8 +98,8 @@ export function InvoicesListClient({
     try {
       await updateInvoice(id, {
         ...data,
-        issueDate: data.issueDate || new Date().toISOString(),
-        dueDate: data.dueDate || new Date().toISOString(),
+        issueDate: new Date(data.issueDate).toISOString(),
+        dueDate: new Date(data.dueDate).toISOString(),
       });
       await reload();
       setShowForm(false);
@@ -152,18 +152,10 @@ export function InvoicesListClient({
               clients={clients}
               jobs={jobs}
               onSubmit={async (data) => {
-                if (editInvoice) {
-                  await handleEdit(editInvoice.id!, {
-                    ...data,
-                    issueDate: editInvoice.issueDate,
-                    dueDate: editInvoice.dueDate ?? "",
-                  });
+                if (editInvoice && editInvoice.id) {
+                  await handleEdit(editInvoice.id, data);
                 } else {
-                  await handleCreate({
-                    ...data,
-                    issueDate: new Date().toISOString(),
-                    dueDate: data.dueDate ?? "",
-                  });
+                  await handleCreate(data);
                 }
               }}
               onCancel={() => {
@@ -203,13 +195,8 @@ export function InvoicesListClient({
                 </div>
                 <div className="text-xs text-gray-400">
                   Issued:{" "}
-                  {invoice.issueDate
-                    ? new Date(invoice.issueDate).toLocaleString()
-                    : "-"}{" "}
-                  | Due:{" "}
-                  {invoice.dueDate
-                    ? new Date(invoice.dueDate).toLocaleString()
-                    : "-"}
+                  {invoice.issueDate ? invoice.issueDate.slice(0, 10) : "-"} |
+                  Due: {invoice.dueDate ? invoice.dueDate.slice(0, 10) : "-"}
                 </div>
               </div>
               <InvoiceActions

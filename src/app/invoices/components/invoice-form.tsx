@@ -38,8 +38,12 @@ export const InvoiceForm = ({
     clientId: initialInvoice?.clientId || "",
     jobId: initialInvoice?.jobId || "",
     status: initialInvoice?.status ?? InvoiceStatus.Draft,
-    issueDate: initialInvoice?.issueDate || new Date().toISOString(),
-    dueDate: initialInvoice?.dueDate || "",
+    issueDate: initialInvoice?.issueDate
+      ? initialInvoice?.issueDate.slice(0, 10)
+      : "",
+    dueDate: initialInvoice?.dueDate
+      ? initialInvoice?.dueDate.slice(0, 10)
+      : "",
     amount: initialInvoice?.amount ?? 0,
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -84,14 +88,6 @@ export const InvoiceForm = ({
     setFieldErrors((prev) => ({ ...prev, [e.target.name]: undefined }));
   };
 
-  const toISODateTime = (date: string) => {
-    if (!date) return undefined;
-    // If already ISO, return as is
-    if (date.length > 10) return date;
-    // Convert YYYY-MM-DD to ISO string (midnight UTC)
-    return new Date(date).toISOString();
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -114,8 +110,12 @@ export const InvoiceForm = ({
         clientId: result.data.clientId,
         jobId: result.data.jobId,
         status: result.data.status,
-        issueDate: toISODateTime(result.data.issueDate || ""),
-        dueDate: result.data.dueDate ? toISODateTime(result.data.dueDate) : "",
+        issueDate: result.data.issueDate
+          ? new Date(result.data.issueDate).toISOString()
+          : "",
+        dueDate: result.data.dueDate
+          ? new Date(result.data.dueDate).toISOString()
+          : "",
         amount: result.data.amount,
       };
       await onSubmit(payload as Omit<Invoice, "id">);
@@ -161,7 +161,7 @@ export const InvoiceForm = ({
           aria-invalid={!!fieldErrors.clientId}
           aria-describedby={fieldErrors.clientId ? "clientId-error" : undefined}
         >
-          <option value="">Select client</option>
+          <option value="">Select a Client</option>
           {clients.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -243,7 +243,7 @@ export const InvoiceForm = ({
           type="date"
           id="issueDate"
           name="issueDate"
-          value={form.issueDate?.slice(0, 10) || ""}
+          value={form.issueDate || ""}
           onChange={(e) =>
             setForm((f) => ({ ...f, issueDate: e.target.value }))
           }
@@ -276,7 +276,7 @@ export const InvoiceForm = ({
           type="date"
           id="dueDate"
           name="dueDate"
-          value={form.dueDate?.slice(0, 10) || ""}
+          value={form.dueDate || ""}
           onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
           disabled={isLoading}
           className={`input input-bordered w-full ${
@@ -299,7 +299,7 @@ export const InvoiceForm = ({
           htmlFor="amount"
           className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
         >
-          Amount
+          Amount ($)
         </label>
         <input
           type="number"
@@ -308,7 +308,7 @@ export const InvoiceForm = ({
           min={0}
           step={0.01}
           placeholder="e.g. 20"
-          value={form.amount}
+          value={form.amount || ""}
           onChange={handleNumberChange}
           className={`input input-bordered w-full ${
             fieldErrors.amount

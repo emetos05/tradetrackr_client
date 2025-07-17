@@ -81,12 +81,6 @@ export const JobsListClient = ({
     );
   });
 
-  //   const toISODateTime = (date: string | undefined) => {
-  //     if (!date) return undefined;
-  //     if (date.length > 10) return date;
-  //     return new Date(date).toISOString();
-  //   };
-
   const handleCreate = async (data: Omit<Job, "id">) => {
     setLoading(true);
     setError(null);
@@ -94,8 +88,10 @@ export const JobsListClient = ({
       await createJob(
         buildJobPayload({
           ...data,
-          createdAt: data.createdAt || new Date().toISOString(),
-          completedAt: data.completedAt ?? null,
+          createdAt: new Date(data.createdAt).toISOString(),
+          completedAt: data.completedAt
+            ? new Date(data.completedAt).toISOString()
+            : null,
         })
       );
       await reload();
@@ -116,8 +112,10 @@ export const JobsListClient = ({
         id,
         buildJobPayload({
           ...data,
-          createdAt: data.createdAt || new Date().toISOString(),
-          completedAt: data.completedAt ?? null,
+          createdAt: new Date(data.createdAt).toISOString(),
+          completedAt: data.completedAt
+            ? new Date(data.completedAt).toISOString()
+            : null,
         })
       );
       await reload();
@@ -172,19 +170,9 @@ export const JobsListClient = ({
               clients={clients}
               onSubmit={async (data) => {
                 if (editJob && editJob.id) {
-                  // Ensure createdAt is present for handleEdit
-                  await handleEdit(editJob.id, {
-                    ...data,
-                    createdAt: editJob.createdAt,
-                    completedAt: editJob.completedAt ?? null,
-                  });
+                  await handleEdit(editJob.id, data);
                 } else {
-                  // For create, add createdAt as now
-                  await handleCreate({
-                    ...data,
-                    createdAt: new Date().toISOString(),
-                    completedAt: data.completedAt ?? null,
-                  });
+                  await handleCreate(data);
                 }
               }}
               onCancel={() => {
@@ -224,14 +212,9 @@ export const JobsListClient = ({
                 <div className="text-xs text-gray-400 mt-1">
                   Client: {getClientName(job.clientId)}
                   <br />
-                  Created:{" "}
-                  {job.createdAt
-                    ? new Date(job.createdAt).toLocaleString()
-                    : "-"}{" "}
-                  | Completed:{" "}
-                  {job.completedAt
-                    ? new Date(job.completedAt).toLocaleString()
-                    : "-"}
+                  Created: {job.createdAt ? job.createdAt.slice(0, 10) : "-"} |
+                  Completed:{" "}
+                  {job.completedAt ? job.completedAt.slice(0, 10) : "-"}
                 </div>
               </div>
               <JobActions

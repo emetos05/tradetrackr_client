@@ -147,7 +147,14 @@ export const ClientsListClient = ({
               <div>
                 <div className="font-semibold">{client.name}</div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {client.email} | {client.phone} | {client.address}
+                  Email: {client.email} | Phone: {client.phone} | Address:{" "}
+                  {client.address}
+                  <div className="text-xs text-gray-400 mt-1">
+                    Created:{" "}
+                    {client.createdAt
+                      ? new Date(client.createdAt).toLocaleString()
+                      : "-"}{" "}
+                  </div>
                 </div>
               </div>
               <ClientActions
