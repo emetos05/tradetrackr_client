@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/app/components/ui/button";
+import * as Dialog from "@radix-ui/react-dialog";
+import { Pencil, Trash2, X } from "lucide-react";
 
 interface InvoiceActionsProps {
   onEdit: () => void;
@@ -37,20 +39,25 @@ export const InvoiceActions = ({
         variant="secondary"
         onClick={onEdit}
         disabled={disabled || isDeleting}
+        className="flex items-center gap-1"
       >
-        Edit
+        <Pencil className="w-4 h-4" /> Edit
       </Button>
-      <Button
-        type="button"
-        variant="secondary"
-        onClick={() => setShowConfirm(true)}
-        disabled={disabled || isDeleting}
-      >
-        {isDeleting ? "Deleting..." : "Delete"}
-      </Button>
-      {showConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-          <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg w-80">
+      <Dialog.Root open={showConfirm} onOpenChange={setShowConfirm}>
+        <Dialog.Trigger asChild>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={disabled || isDeleting}
+            className="flex items-center gap-1"
+          >
+            <Trash2 className="w-4 h-4" />{" "}
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+        </Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/30 z-50" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 max-h-[90vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded bg-white dark:bg-gray-900 p-6 shadow-lg z-50 focus:outline-none">
             <h2 className="font-semibold mb-2">Delete Invoice?</h2>
             <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
               Are you sure you want to delete this invoice? This action cannot
@@ -58,26 +65,33 @@ export const InvoiceActions = ({
             </p>
             {error && <div className="text-red-500 text-xs mb-2">{error}</div>}
             <div className="flex gap-2 justify-end">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setShowConfirm(false)}
-                disabled={isDeleting}
-              >
-                Cancel
-              </Button>
+              <Dialog.Close asChild>
+                <Button type="button" variant="secondary" disabled={isDeleting}>
+                  Cancel
+                </Button>
+              </Dialog.Close>
               <Button
                 type="button"
                 variant="secondary"
                 onClick={handleDelete}
                 disabled={isDeleting}
+                className="flex items-center gap-1"
               >
+                <Trash2 className="w-4 h-4" />{" "}
                 {isDeleting ? "Deleting..." : "Delete"}
               </Button>
             </div>
-          </div>
-        </div>
-      )}
+            <Dialog.Close asChild>
+              <button
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </Dialog.Close>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 };

@@ -12,6 +12,9 @@ import {
   deleteInvoice,
   getInvoices,
 } from "@/app/lib/actions";
+import * as Dialog from "@radix-ui/react-dialog";
+import { X } from "lucide-react";
+import { DocumentTextIcon } from "@heroicons/react/24/outline";
 
 type InvoicesListClientProps = {
   initialInvoices: Invoice[];
@@ -145,51 +148,64 @@ export function InvoicesListClient({
       </div>
       {error && <div className="text-red-500 mb-2">{error}</div>}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg w-full max-w-md relative">
-            <InvoiceForm
-              initialInvoice={editInvoice || {}}
-              clients={clients}
-              jobs={jobs}
-              onSubmit={async (data) => {
-                if (editInvoice && editInvoice.id) {
-                  await handleEdit(editInvoice.id, data);
-                } else {
-                  await handleCreate(data);
-                }
-              }}
-              onCancel={() => {
-                setShowForm(false);
-                setEditInvoice(null);
-              }}
-            />
-            <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-              onClick={() => {
-                setShowForm(false);
-                setEditInvoice(null);
-              }}
-              aria-label="Close"
-            >
-              ×
-            </button>
-          </div>
-        </div>
+        <Dialog.Root open={showForm} onOpenChange={setShowForm}>
+          <Dialog.Portal>
+            <Dialog.Overlay className="fixed inset-0 bg-black/30 z-50" />
+            <Dialog.Content className="fixed left-1/2 top-1/2 max-h-[90vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded bg-white dark:bg-gray-900 p-6 shadow-lg z-50 focus:outline-none">
+              <InvoiceForm
+                initialInvoice={editInvoice || {}}
+                clients={clients}
+                jobs={jobs}
+                onSubmit={async (data) => {
+                  if (editInvoice && editInvoice.id) {
+                    await handleEdit(editInvoice.id, data);
+                  } else {
+                    await handleCreate(data);
+                  }
+                }}
+                onCancel={() => {
+                  setShowForm(false);
+                  setEditInvoice(null);
+                }}
+              />
+              <Dialog.Close asChild>
+                <button
+                  className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </Dialog.Close>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
       )}
-      <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+      <ul className="grid gap-3 sm:gap-4">
         {filtered.length === 0 ? (
-          <li className="py-4 text-center text-gray-500">No invoices found.</li>
+          <li className="py-4 text-center text-gray-500 bg-white dark:bg-gray-800 rounded shadow">
+            No invoices found.
+          </li>
         ) : (
           filtered.map((invoice) => (
             <li
               key={invoice.id}
-              className="py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+              className="group bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition-shadow cursor-pointer flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
+              tabIndex={0}
+              onClick={() =>
+                invoice.id && window.location.assign(`/invoices/${invoice.id}`)
+              }
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && invoice.id)
+                  window.location.assign(`/invoices/${invoice.id}`);
+              }}
+              aria-label={`View details for invoice ${invoice.id}`}
             >
-              <div>
-                <div className="font-semibold">
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold flex items-center gap-2">
+                  <DocumentTextIcon className="w-5 h-5 text-yellow-500" />{" "}
                   {getClientName(invoice.clientId)}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
                   Job: {getJobTitle(invoice.jobId)} | Status:{" "}
                   {getStatusLabel(invoice.status)} | Amount: ${invoice.amount}
                 </div>
@@ -199,18 +215,31 @@ export function InvoicesListClient({
                   Due: {invoice.dueDate ? invoice.dueDate.slice(0, 10) : "-"}
                 </div>
               </div>
-              <InvoiceActions
-                onEdit={() => {
-                  setEditInvoice(invoice);
-                  setShowForm(true);
-                }}
-                onDelete={async () => {
-                  if (invoice.id) {
-                    await handleDelete(invoice.id);
-                  }
-                }}
-                disabled={!invoice.id}
-              />
+              <div className="flex gap-2 items-center">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded font-medium transition text-sm text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.location.assign(`/invoices/${invoice.id}`);
+                  }}
+                  aria-label="View details"
+                >
+                  <DocumentTextIcon className="w-4 h-4" /> Details
+                </button>
+                <InvoiceActions
+                  onEdit={() => {
+                    setEditInvoice(invoice);
+                    setShowForm(true);
+                  }}
+                  onDelete={async () => {
+                    if (invoice.id) {
+                      await handleDelete(invoice.id);
+                    }
+                  }}
+                  disabled={!invoice.id}
+                />
+              </div>
             </li>
           ))
         )}
