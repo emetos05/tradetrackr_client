@@ -117,4 +117,63 @@
 }
 .logoutBtn:hover {
   background: #b91c1c;
+}
+@media (max-width: 640px) {
+  .left {
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+  .right {
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+  .navLinks {
+    display: none;
+    position: absolute;
+    top: 3.5rem;
+    left: 0;
+    width: 100vw;
+    background: rgba(255,255,255,0.98);
+    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
+    flex-direction: column;
+    z-index: 100;
+    padding: 1rem 0;
+  }
+  .navLinks.open {
+    display: flex;
+  }
+  .hamburger {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 2rem;
+    height: 2rem;
+    cursor: pointer;
+    z-index: 101;
+    background: none;
+    border: none;
+    margin-left: 0.5rem;
+  }
+  .hamburgerBar {
+    width: 1.5rem;
+    height: 0.2rem;
+    background: #374151;
+    margin: 0.2rem 0;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+  .navbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.5rem 0.5rem;
+  }
+}
+@media (max-width: 640px) and (prefers-color-scheme: dark) {
+  .navLinks {
+    background: rgba(17,24,39,0.98);
+  }
+  .hamburgerBar {
+    background: #e5e7eb;
+  }
 } 
