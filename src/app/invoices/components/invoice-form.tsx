@@ -208,7 +208,9 @@ export const InvoiceForm = ({
           id="status"
           name="status"
           value={form.status}
-          onChange={handleChange}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, status: Number(e.target.value) }))
+          }
           className={`input input-bordered w-full ${
             fieldErrors.status
               ? "ring-2 ring-red-500"

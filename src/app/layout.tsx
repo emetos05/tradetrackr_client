@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Nav from "./components/NavMenu";
 import { auth0 } from "./lib/auth0";
+import { Suspense } from "react";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -21,6 +22,15 @@ export const metadata: Metadata = {
     "Trade Tracker app for tradespeople to manage their clients, jobs and invoices",
 };
 
+function GlobalLoading() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+      <div className="text-lg text-gray-600 dark:text-gray-300">Loading...</div>
+    </div>
+  );
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -35,7 +45,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Nav isAuthenticated={isAuthenticated} />
-        {children}
+        <Suspense fallback={<GlobalLoading />}>{children}</Suspense>
       </body>
     </html>
   );
