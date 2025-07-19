@@ -41,6 +41,12 @@
   - Use Tailwind and Shadcn UI components consistently
   - Add polished UI-friendly icons
 
+  [ ] **Implement Get feature**
+
+  - Get single item (Client/Job/Invoice) from the API in action.ts
+  - Add detail modal to show the contents
+  - Integrate with Details button in list
+
 - [ ] **Metadata & SEO**
 
   - Integrate metadata for all pages using Next.js metadata exports

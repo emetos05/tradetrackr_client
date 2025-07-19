@@ -41,27 +41,28 @@ export const InvoiceActions = ({
         type="button"
         onClick={onDetails}
         disabled={disabled || isDeleting}
-        className="flex items-center gap-1 text-gray-700 bg-blue-300 hover:bg-blue-400"
+        className="flex items-center gap-1 text-gray-600 dark:text-gray-300 bg-blue-100 hover:bg-blue-200"
       >
-        <DocumentTextIcon className="w-4 h-4" /> Details
+        <DocumentTextIcon className="w-4 h-4 text-blue-600 dark:text-blue-300" />{" "}
+        Details
       </Button>
       <Button
         type="button"
         variant="secondary"
         onClick={onEdit}
         disabled={disabled || isDeleting}
-        className="flex items-center gap-1"
+        className="flex items-center gap-1 dark:text-gray-300"
       >
-        <Pencil className="w-4 h-4" /> Edit
+        <Pencil className="w-4 h-4 text-gray-600 dark:text-gray-300" /> Edit
       </Button>
       <Dialog.Root open={showConfirm} onOpenChange={setShowConfirm}>
         <Dialog.Trigger asChild>
           <Button
             type="button"
             disabled={disabled || isDeleting}
-            className="flex items-center gap-1 text-gray-700 bg-red-300 hover:bg-red-400"
+            className="flex items-center gap-1 text-gray-600 dark:text-gray-300 bg-red-100 hover:bg-red-200"
           >
-            <Trash2 className="w-4 h-4" />{" "}
+            <Trash2 className="w-4 h-4 text-red-600 dark:text-red-300" />{" "}
             {isDeleting ? "Deleting..." : "Delete"}
           </Button>
         </Dialog.Trigger>
