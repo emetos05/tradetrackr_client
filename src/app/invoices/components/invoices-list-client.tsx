@@ -129,13 +129,13 @@ export function InvoicesListClient({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <input
           type="text"
           placeholder="Search invoices..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border rounded px-2 py-1 w-64"
+          className="border rounded px-2 py-1 w-full sm:w-64"
         />
         <Button
           onClick={() => {
@@ -189,15 +189,8 @@ export function InvoicesListClient({
           filtered.map((invoice) => (
             <li
               key={invoice.id}
-              className="group bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition-shadow cursor-pointer flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
+              className="group bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition-shadow flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
               tabIndex={0}
-              onClick={() =>
-                invoice.id && window.location.assign(`/invoices/${invoice.id}`)
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && invoice.id)
-                  window.location.assign(`/invoices/${invoice.id}`);
-              }}
               aria-label={`View details for invoice ${invoice.id}`}
             >
               <div className="flex-1 min-w-0">

@@ -148,15 +148,8 @@ export const ClientsListClient = ({
           filtered.map((client) => (
             <li
               key={client.id}
-              className="group bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition-shadow cursor-pointer flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
+              className="group bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition-shadow flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
               tabIndex={0}
-              onClick={() =>
-                client.id && window.location.assign(`/clients/${client.id}`)
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && client.id)
-                  window.location.assign(`/clients/${client.id}`);
-              }}
               aria-label={`View details for client ${client.name}`}
             >
               <div className="flex-1 min-w-0">

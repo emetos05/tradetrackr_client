@@ -11,10 +11,14 @@ export default async function JobsPage() {
   // const jobs = await getJobs();
 
   return (
-    <main className="max-w-2xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-2">Jobs</h1>
-      <p className="mb-4 text-gray-600">Manage your jobs here.</p>
-      <JobsListClient initialJobs={jobs} clients={clients} />
+    <main className="flex flex-col items-center min-h-screen p-8 bg-white dark:bg-gray-900">
+      <div className="w-full max-w-4xl flex flex-col">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          Jobs
+        </h1>
+        <p className="mb-4 text-gray-600">Manage your jobs here.</p>
+        <JobsListClient initialJobs={jobs} clients={clients} />
+      </div>
     </main>
   );
 }

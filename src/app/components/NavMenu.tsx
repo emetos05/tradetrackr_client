@@ -22,24 +22,24 @@ export default function Nav({ isAuthenticated = false }: NavProps) {
   const router = useRouter();
 
   // Simulate global search (replace with real API call if available)
-  async function handleGlobalSearch(query: string) {
-    setSearch(query);
-    if (query.length < 2) {
-      setSearchResults([]);
-      setSearchOpen(false);
-      return;
-    }
-    // TODO: Replace with real API call
-    // Example: const res = await fetch(`/api/global-search?q=${query}`)
-    // setSearchResults(await res.json());
-    // For now, just show dummy results
-    setSearchResults([
-      { type: "client", id: "1", name: "Jane Doe", href: "/clients/1" },
-      { type: "job", id: "2", name: "Kitchen Remodel", href: "/jobs/2" },
-      { type: "invoice", id: "3", name: "Invoice #1234", href: "/invoices/3" },
-    ]);
-    setSearchOpen(true);
-  }
+  // async function handleGlobalSearch(query: string) {
+  //   setSearch(query);
+  //   if (query.length < 2) {
+  //     setSearchResults([]);
+  //     setSearchOpen(false);
+  //     return;
+  //   }
+  // TODO: Replace with real API call
+  // Example: const res = await fetch(`/api/global-search?q=${query}`)
+  // setSearchResults(await res.json());
+  // For now, just show dummy results
+  //   setSearchResults([
+  //     { type: "client", id: "1", name: "Jane Doe", href: "/clients/1" },
+  //     { type: "job", id: "2", name: "Kitchen Remodel", href: "/jobs/2" },
+  //     { type: "invoice", id: "3", name: "Invoice #1234", href: "/invoices/3" },
+  //   ]);
+  //   setSearchOpen(true);
+  // }
 
   function getIcon(type: string) {
     if (type === "client") return <User className="w-4 h-4 text-blue-500" />;
@@ -128,7 +128,8 @@ export default function Nav({ isAuthenticated = false }: NavProps) {
                   type="text"
                   placeholder="Search..."
                   value={search}
-                  onChange={(e) => handleGlobalSearch(e.target.value)}
+                  // onChange={(e) => handleGlobalSearch(e.target.value)}
+                  readOnly //for now until global search is fixed
                   className={styles.searchInput + " pl-8"}
                   onFocus={() => search.length > 1 && setSearchOpen(true)}
                 />

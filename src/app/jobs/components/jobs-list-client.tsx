@@ -206,15 +206,8 @@ export const JobsListClient = ({
           filtered.map((job) => (
             <li
               key={job.id}
-              className="group bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition-shadow cursor-pointer flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
+              className="group bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition-shadow flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
               tabIndex={0}
-              onClick={() =>
-                job.id && window.location.assign(`/jobs/${job.id}`)
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && job.id)
-                  window.location.assign(`/jobs/${job.id}`);
-              }}
               aria-label={`View details for job ${job.title}`}
             >
               <div className="flex-1 min-w-0">
