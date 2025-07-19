@@ -186,18 +186,18 @@ export default function Nav({ isAuthenticated = false }: NavProps) {
               href="/auth/login?returnTo=/dashboard"
               className={styles.loginBtn}
             >
-              Log In
+              <span className="text-sm sm:text-base">Log In</span>
             </Link>
             <Link
               href="/auth/login?screen_hint=signup"
               className={styles.signupBtn}
             >
-              Sign Up
+              <span className="text-sm sm:text-base">Sign Up</span>
             </Link>
           </>
         ) : (
           <Link href="/auth/logout" className={styles.logoutBtn}>
-            Log Out
+            <span className="text-sm sm:text-base">Log Out</span>
           </Link>
         )}
       </div>

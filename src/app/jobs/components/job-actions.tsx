@@ -3,14 +3,21 @@ import { useState } from "react";
 import { Button } from "@/app/components/ui/button";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Pencil, Trash2, X } from "lucide-react";
+import { BriefcaseIcon } from "@heroicons/react/24/outline";
 
 interface JobActionsProps {
+  onDetails: () => void;
   onEdit: () => void;
   onDelete: () => Promise<void>;
   disabled?: boolean;
 }
 
-export const JobActions = ({ onEdit, onDelete, disabled }: JobActionsProps) => {
+export const JobActions = ({
+  onDetails,
+  onEdit,
+  onDelete,
+  disabled,
+}: JobActionsProps) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +39,14 @@ export const JobActions = ({ onEdit, onDelete, disabled }: JobActionsProps) => {
     <div className="flex gap-2">
       <Button
         type="button"
+        onClick={onDetails}
+        disabled={disabled || isDeleting}
+        className="flex items-center gap-1 text-gray-700 bg-blue-300 hover:bg-blue-400"
+      >
+        <BriefcaseIcon className="w-4 h-4" /> Details
+      </Button>
+      <Button
+        type="button"
         variant="secondary"
         onClick={onEdit}
         disabled={disabled || isDeleting}
@@ -43,9 +58,8 @@ export const JobActions = ({ onEdit, onDelete, disabled }: JobActionsProps) => {
         <Dialog.Trigger asChild>
           <Button
             type="button"
-            variant="secondary"
             disabled={disabled || isDeleting}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 text-gray-700 bg-red-300 hover:bg-red-400"
           >
             <Trash2 className="w-4 h-4" />{" "}
             {isDeleting ? "Deleting..." : "Delete"}

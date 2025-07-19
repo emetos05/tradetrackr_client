@@ -3,14 +3,17 @@ import { useState } from "react";
 import { Button } from "@/app/components/ui/button";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Pencil, Trash2, X } from "lucide-react";
+import { DocumentTextIcon } from "@heroicons/react/24/outline";
 
 interface InvoiceActionsProps {
+  onDetails: () => void;
   onEdit: () => void;
   onDelete: () => Promise<void>;
   disabled?: boolean;
 }
 
 export const InvoiceActions = ({
+  onDetails,
   onEdit,
   onDelete,
   disabled,
@@ -36,6 +39,14 @@ export const InvoiceActions = ({
     <div className="flex gap-2">
       <Button
         type="button"
+        onClick={onDetails}
+        disabled={disabled || isDeleting}
+        className="flex items-center gap-1 text-gray-700 bg-blue-300 hover:bg-blue-400"
+      >
+        <DocumentTextIcon className="w-4 h-4" /> Details
+      </Button>
+      <Button
+        type="button"
         variant="secondary"
         onClick={onEdit}
         disabled={disabled || isDeleting}
@@ -47,9 +58,8 @@ export const InvoiceActions = ({
         <Dialog.Trigger asChild>
           <Button
             type="button"
-            variant="secondary"
             disabled={disabled || isDeleting}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 text-gray-700 bg-red-300 hover:bg-red-400"
           >
             <Trash2 className="w-4 h-4" />{" "}
             {isDeleting ? "Deleting..." : "Delete"}

@@ -189,7 +189,7 @@ export function InvoicesListClient({
           filtered.map((invoice) => (
             <li
               key={invoice.id}
-              className="group bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition-shadow flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
+              className="group bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition-shadow sm:max-w-4xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
               tabIndex={0}
               aria-label={`View details for invoice ${invoice.id}`}
             >
@@ -199,8 +199,11 @@ export function InvoicesListClient({
                   {getClientName(invoice.clientId)}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                  Job: {getJobTitle(invoice.jobId)} | Status:{" "}
-                  {getStatusLabel(invoice.status)} | Amount: ${invoice.amount}
+                  Job: {getJobTitle(invoice.jobId)}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                  Status: {getStatusLabel(invoice.status)} | Amount: $
+                  {invoice.amount}
                 </div>
                 <div className="text-xs text-gray-400">
                   Issued:{" "}
@@ -209,18 +212,8 @@ export function InvoicesListClient({
                 </div>
               </div>
               <div className="flex gap-2 items-center">
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded font-medium transition text-sm text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.location.assign(`/invoices/${invoice.id}`);
-                  }}
-                  aria-label="View details"
-                >
-                  <DocumentTextIcon className="w-4 h-4" /> Details
-                </button>
                 <InvoiceActions
+                  onDetails={() => {}}
                   onEdit={() => {
                     setEditInvoice(invoice);
                     setShowForm(true);

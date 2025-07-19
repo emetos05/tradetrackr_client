@@ -206,7 +206,7 @@ export const JobsListClient = ({
           filtered.map((job) => (
             <li
               key={job.id}
-              className="group bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition-shadow flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
+              className="group bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition-shadow sm:max-w-4xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
               tabIndex={0}
               aria-label={`View details for job ${job.title}`}
             >
@@ -216,31 +216,24 @@ export const JobsListClient = ({
                   {job.title}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                  {job.description} | Status: {getStatusLabel(job.status)} |
-                  Rate: ${job.hourlyRate}/hr | Hours: {job.hoursWorked}hrs |
-                  Material: ${job.materialCost}
+                  Client: {getClientName(job.clientId)}
+                  <div>Description: {job.description}</div>
+                  <div>Status: {getStatusLabel(job.status)}</div>
+                  <div>
+                    Rate: ${job.hourlyRate}
+                    /hr | Hours: {job.hoursWorked}hrs | Material Cost: $
+                    {job.materialCost}
+                  </div>
                 </div>
                 <div className="text-xs text-gray-400 mt-1">
-                  Client: {getClientName(job.clientId)}
-                  <br />
                   Created: {job.createdAt ? job.createdAt.slice(0, 10) : "-"} |
                   Completed:{" "}
                   {job.completedAt ? job.completedAt.slice(0, 10) : "-"}
                 </div>
               </div>
               <div className="flex gap-2 items-center">
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded font-medium transition text-sm text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.location.assign(`/jobs/${job.id}`);
-                  }}
-                  aria-label="View details"
-                >
-                  <BriefcaseIcon className="w-4 h-4" /> Details
-                </button>
                 <JobActions
+                  onDetails={() => {}}
                   onEdit={() => {
                     setEditJob(job);
                     setShowForm(true);
