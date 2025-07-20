@@ -1,44 +1,27 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Job, JobStatus } from "../types/job";
+import { Job } from "../types/job";
+import { getJobStatusLabel, getClientName } from "../../helpers/getLabel";
 import { Client } from "@/app/clients/types/client";
 import { JobForm } from "./job-form";
 import { JobActions } from "./job-actions";
 import { Button } from "@/app/components/ui/button";
 import {
-  getClients,
   createJob,
   updateJob,
   deleteJob,
-  getJobs, // <-- import getJobs
+  getJobs,
   JobDto,
 } from "@/app/lib/actions";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { BriefcaseIcon } from "@heroicons/react/24/outline";
+import { JobDetails } from "./job-details";
 
 interface JobsListClientProps {
   initialJobs: Job[];
   clients: Client[];
 }
-
-// Helper to get status label
-const getStatusLabel = (status: JobStatus) => {
-  switch (status) {
-    case JobStatus.NotStarted:
-      return "Not Started";
-    case JobStatus.InProgress:
-      return "In Progress";
-    case JobStatus.Completed:
-      return "Completed";
-    case JobStatus.OnHold:
-      return "On Hold";
-    case JobStatus.Cancelled:
-      return "Cancelled";
-    default:
-      return "Unknown";
-  }
-};
 
 // Utility to build JobDto payload for API
 const buildJobPayload = (data: Omit<Job, "id">): JobDto => ({
@@ -63,12 +46,7 @@ export const JobsListClient = ({
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Helper to get client name by ID (now inside component)
-  const getClientName = (clientId: string) => {
-    const client = clients.find((c) => c.id === clientId);
-    return client ? client.name : "Unknown Client";
-  };
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   const reload = async () => {
     const latest = await getJobs();
@@ -80,7 +58,7 @@ export const JobsListClient = ({
     return (
       job.title.toLowerCase().includes(q) ||
       job.description.toLowerCase().includes(q) ||
-      getStatusLabel(job.status).toLowerCase().includes(q)
+      getJobStatusLabel(job.status).toLowerCase().includes(q)
     );
   });
 
@@ -184,6 +162,7 @@ export const JobsListClient = ({
                   setShowForm(false);
                   setEditJob(null);
                 }}
+                title={editJob ? "Edit Job" : "Add New Job"}
               />
               <Dialog.Close asChild>
                 <button
@@ -216,9 +195,9 @@ export const JobsListClient = ({
                   {job.title}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                  Client: {getClientName(job.clientId)}
+                  Client: {getClientName(clients, job.clientId)}
                   <div>Description: {job.description}</div>
-                  <div>Status: {getStatusLabel(job.status)}</div>
+                  <div>Status: {getJobStatusLabel(job.status)}</div>
                   <div>
                     Rate: ${job.hourlyRate}
                     /hr | Hours: {job.hoursWorked}hrs | Material Cost: $
@@ -233,7 +212,7 @@ export const JobsListClient = ({
               </div>
               <div className="flex gap-2 items-center">
                 <JobActions
-                  onDetails={() => {}}
+                  onDetails={() => setSelectedJob(job)}
                   onEdit={() => {
                     setEditJob(job);
                     setShowForm(true);
@@ -251,6 +230,14 @@ export const JobsListClient = ({
         )}
       </ul>
       {loading && <div className="text-blue-500 mt-2">Loading...</div>}
+      {selectedJob && (
+        <JobDetails
+          job={selectedJob}
+          clients={clients}
+          isOpen={!!selectedJob}
+          onClose={() => setSelectedJob(null)}
+        />
+      )}
     </div>
   );
 };

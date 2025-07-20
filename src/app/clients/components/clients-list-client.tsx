@@ -13,6 +13,7 @@ import {
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { UsersIcon } from "@heroicons/react/24/outline";
+import { ClientDetails } from "./client-details";
 
 interface ClientsListClientProps {
   initialClients: Client[];
@@ -27,6 +28,7 @@ export const ClientsListClient = ({
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   const reload = async () => {
     const latest = await getClients();
@@ -126,6 +128,7 @@ export const ClientsListClient = ({
                   setShowForm(false);
                   setEditClient(null);
                 }}
+                title={editClient ? "Edit Client" : "Add New Client"}
               />
               <Dialog.Close asChild>
                 <button
@@ -164,14 +167,12 @@ export const ClientsListClient = ({
                 </div>
                 <div className="text-xs text-gray-400 mt-1">
                   Created:{" "}
-                  {client.createdAt
-                    ? new Date(client.createdAt).toLocaleString()
-                    : "-"}
+                  {client.createdAt ? client.createdAt.slice(0, 10) : "-"}
                 </div>
               </div>
               <div className="flex gap-2 items-center">
                 <ClientActions
-                  onDetails={() => {}}
+                  onDetails={() => setSelectedClient(client)}
                   onEdit={() => {
                     setEditClient(client);
                     setShowForm(true);
@@ -189,6 +190,13 @@ export const ClientsListClient = ({
         )}
       </ul>
       {loading && <div className="text-blue-500 mt-2">Loading...</div>}
+      {selectedClient && (
+        <ClientDetails
+          client={selectedClient}
+          isOpen={!!selectedClient}
+          onClose={() => setSelectedClient(null)}
+        />
+      )}
     </div>
   );
 };

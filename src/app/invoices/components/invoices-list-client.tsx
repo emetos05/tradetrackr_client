@@ -1,6 +1,11 @@
 "use client";
 import { useState } from "react";
-import { Invoice, InvoiceStatus } from "../types/invoice";
+import { Invoice } from "../types/invoice";
+import {
+  getInvoiceStatusLabel,
+  getClientName,
+  getJobTitle,
+} from "../../helpers/getLabel";
 import { Client } from "@/app/clients/types/client";
 import { Job } from "@/app/jobs/types/job";
 import { InvoiceForm } from "./invoice-form";
@@ -15,28 +20,12 @@ import {
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { DocumentTextIcon } from "@heroicons/react/24/outline";
+import { InvoiceDetails } from "./invoice-details";
 
 type InvoicesListClientProps = {
   initialInvoices: Invoice[];
   clients: Client[];
   jobs: Job[];
-};
-
-const getStatusLabel = (status: InvoiceStatus) => {
-  switch (status) {
-    case InvoiceStatus.Draft:
-      return "Draft";
-    case InvoiceStatus.Sent:
-      return "Sent";
-    case InvoiceStatus.Paid:
-      return "Paid";
-    case InvoiceStatus.Overdue:
-      return "Overdue";
-    case InvoiceStatus.Cancelled:
-      return "Cancelled";
-    default:
-      return "Unknown";
-  }
 };
 
 export function InvoicesListClient({
@@ -50,16 +39,7 @@ export function InvoicesListClient({
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const getClientName = (clientId: string) => {
-    const client = clients.find((c) => c.id === clientId);
-    return client ? client.name : "Unknown Client";
-  };
-  const getJobTitle = (jobId?: string) => {
-    if (!jobId) return "";
-    const job = jobs.find((j) => j.id === jobId);
-    return job ? job.title : "Unknown Job";
-  };
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   const reload = async () => {
     const latest = await getInvoices();
@@ -69,9 +49,9 @@ export function InvoicesListClient({
   const filtered = invoices.filter((invoice) => {
     const q = search.toLowerCase();
     return (
-      getClientName(invoice.clientId).toLowerCase().includes(q) ||
-      getJobTitle(invoice.jobId).toLowerCase().includes(q) ||
-      getStatusLabel(invoice.status).toLowerCase().includes(q) ||
+      getClientName(clients, invoice.clientId).toLowerCase().includes(q) ||
+      getJobTitle(jobs, invoice.jobId).toLowerCase().includes(q) ||
+      getInvoiceStatusLabel(invoice.status).toLowerCase().includes(q) ||
       invoice.amount.toString().includes(q)
     );
   });
@@ -167,6 +147,7 @@ export function InvoicesListClient({
                   setShowForm(false);
                   setEditInvoice(null);
                 }}
+                title={editInvoice ? "Edit Invoice" : "Add New Invoice"}
               />
               <Dialog.Close asChild>
                 <button
@@ -196,13 +177,13 @@ export function InvoicesListClient({
               <div className="flex-1 min-w-0">
                 <div className="font-semibold flex items-center gap-2">
                   <DocumentTextIcon className="w-5 h-5 text-yellow-500" />{" "}
-                  {getClientName(invoice.clientId)}
+                  {getClientName(clients, invoice.clientId)}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                  Job: {getJobTitle(invoice.jobId)}
+                  Job: {getJobTitle(jobs, invoice.jobId)}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                  Status: {getStatusLabel(invoice.status)} | Amount: $
+                  Status: {getInvoiceStatusLabel(invoice.status)} | Amount: $
                   {invoice.amount}
                 </div>
                 <div className="text-xs text-gray-400">
@@ -213,7 +194,7 @@ export function InvoicesListClient({
               </div>
               <div className="flex gap-2 items-center">
                 <InvoiceActions
-                  onDetails={() => {}}
+                  onDetails={() => setSelectedInvoice(invoice)}
                   onEdit={() => {
                     setEditInvoice(invoice);
                     setShowForm(true);
@@ -231,6 +212,15 @@ export function InvoicesListClient({
         )}
       </ul>
       {loading && <div className="text-blue-500 mt-2">Loading...</div>}
+      {selectedInvoice && (
+        <InvoiceDetails
+          invoice={selectedInvoice}
+          clients={clients}
+          jobs={jobs}
+          isOpen={!!selectedInvoice}
+          onClose={() => setSelectedInvoice(null)}
+        />
+      )}
     </div>
   );
 }

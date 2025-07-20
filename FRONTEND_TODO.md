@@ -41,11 +41,10 @@
   - Use Tailwind and Shadcn UI components consistently
   - Add polished UI-friendly icons
 
-  [ ] **Implement Get feature**
+  [X] **Implement Get feature**
 
-  - Get single item (Client/Job/Invoice) from the API in action.ts
-  - Add detail modal to show the contents
-  - Integrate with Details button in list
+  - Add detail modal to show the contents from the Get action
+  - Integrate with Details button in list component
 
 - [ ] **Metadata & SEO**
 

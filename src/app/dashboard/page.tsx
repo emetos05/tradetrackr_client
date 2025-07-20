@@ -8,6 +8,7 @@ import {
   CurrencyDollarIcon,
   ClockIcon,
 } from "@heroicons/react/24/outline";
+import { getJobTitle } from "../helpers/getLabel";
 
 export const metadata = {
   title: "Dashboard",
@@ -21,7 +22,7 @@ function formatCurrency(amount: number) {
 
 function formatDate(date: string) {
   if (!date) return "-";
-  return new Date(date).toLocaleString();
+  return date.slice(0, 10); // Format as YYYY-MM-DD
 }
 
 export default async function DashboardPage() {
@@ -75,7 +76,7 @@ export default async function DashboardPage() {
       type: "invoice" as const,
       id: inv.id,
       date: inv.issueDate,
-      title: `Invoice #${inv.id?.slice(-4) ?? ""}`,
+      title: `Invoice for ${getJobTitle(jobs, inv.jobId) || "Unknown Job"}`,
       description: `Invoice for $${inv.amount} (${InvoiceStatus[inv.status]})`,
       icon: <DocumentTextIcon className="h-5 w-5 text-yellow-500" />,
     })),

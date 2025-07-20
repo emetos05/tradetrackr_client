@@ -36,3 +36,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 tradetrackr_swagger.json
+FRONTEND_TODO.md

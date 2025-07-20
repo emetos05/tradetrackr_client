@@ -10,6 +10,10 @@ export async function getClients(): Promise<Client[]> {
   return await authRequest("Clients");
 }
 
+export async function getClient(id: string): Promise<Client> {
+  return await authRequest(`Clients/${id}`);
+}
+
 export async function createClient(client: Omit<Client, "id">): Promise<void> {
   await authRequest("Clients", {
     method: "POST",
@@ -18,7 +22,10 @@ export async function createClient(client: Omit<Client, "id">): Promise<void> {
   revalidatePath("/clients");
 }
 
-export async function updateClient(id: string, client: Omit<Client, "id">): Promise<void> {
+export async function updateClient(
+  id: string,
+  client: Omit<Client, "id">
+): Promise<void> {
   await authRequest(`Clients/${id}`, {
     method: "PUT",
     body: JSON.stringify(client),
@@ -35,6 +42,10 @@ export async function deleteClient(id: string): Promise<void> {
 
 export async function getJobs(): Promise<Job[]> {
   return await authRequest("Jobs");
+}
+
+export async function getJob(id: string): Promise<Job> {
+  return await authRequest(`Jobs/${id}`);
 }
 
 // Add JobDto type for API payloads
@@ -67,7 +78,13 @@ export async function getInvoices(): Promise<Invoice[]> {
   return await authRequest("Invoices");
 }
 
-export async function createInvoice(invoice: Omit<Invoice, "id">): Promise<void> {
+export async function getInvoice(id: string): Promise<Invoice> {
+  return await authRequest(`Invoices/${id}`);
+}
+
+export async function createInvoice(
+  invoice: Omit<Invoice, "id">
+): Promise<void> {
   await authRequest("Invoices", {
     method: "POST",
     body: JSON.stringify(invoice),
@@ -75,7 +92,10 @@ export async function createInvoice(invoice: Omit<Invoice, "id">): Promise<void>
   revalidatePath("/invoices");
 }
 
-export async function updateInvoice(id: string, invoice: Omit<Invoice, "id">): Promise<void> {
+export async function updateInvoice(
+  id: string,
+  invoice: Omit<Invoice, "id">
+): Promise<void> {
   await authRequest(`Invoices/${id}`, {
     method: "PUT",
     body: JSON.stringify(invoice),
@@ -85,6 +105,7 @@ export async function updateInvoice(id: string, invoice: Omit<Invoice, "id">): P
 
 export async function deleteInvoice(id: string): Promise<void> {
   await authRequest(`Invoices/${id}`, {
-    method: "DELETE" });
+    method: "DELETE",
+  });
   revalidatePath("/invoices");
 }
