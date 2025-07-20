@@ -41,7 +41,7 @@
   - Use Tailwind and Shadcn UI components consistently
   - Add polished UI-friendly icons
 
-  [X] **Implement Get feature**
+- [x] **Implement Get feature**
 
   - Add detail modal to show the contents from the Get action
   - Integrate with Details button in list component
