@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { getClients, getJobs, getInvoices } from "@/app/lib/actions";
 import { InvoiceStatus } from "@/app/invoices/types/invoice";
 import {
@@ -10,10 +11,10 @@ import {
 } from "@heroicons/react/24/outline";
 import { getJobTitle } from "../helpers/getLabel";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Dashboard",
   description:
-    "Your personal dashboard for managing clients, jobs and invoices.",
+    "View your business overview, recent activities, and key metrics",
 };
 
 function formatCurrency(amount: number) {

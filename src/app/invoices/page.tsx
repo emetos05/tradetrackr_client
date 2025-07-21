@@ -1,7 +1,8 @@
+import { Metadata } from "next";
 import { getInvoices, getClients, getJobs } from "@/app/lib/actions";
 import { InvoicesListClient } from "./components/invoices-list-client";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Invoices",
   description: "Manage your invoices.",
 };

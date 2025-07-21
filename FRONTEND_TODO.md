@@ -46,7 +46,7 @@
   - Add detail modal to show the contents from the Get action
   - Integrate with Details button in list component
 
-- [ ] **Metadata & SEO**
+- [x] **Metadata & SEO**
 
   - Integrate metadata for all pages using Next.js metadata exports
   - Ensure unique, descriptive titles and meta descriptions

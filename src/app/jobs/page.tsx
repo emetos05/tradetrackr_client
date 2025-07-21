@@ -1,7 +1,8 @@
+import { Metadata } from "next";
 import { getJobs, getClients } from "@/app/lib/actions";
 import { JobsListClient } from "./components/jobs-list-client";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Jobs",
   description: "Manage your jobs.",
 };

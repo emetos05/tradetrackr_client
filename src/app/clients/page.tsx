@@ -1,7 +1,8 @@
+import { Metadata } from "next";
 import { getClients } from "@/app/lib/actions";
 import { ClientsListClient } from "./components/clients-list-client";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Clients",
   description: "Manage your clients.",
 };
