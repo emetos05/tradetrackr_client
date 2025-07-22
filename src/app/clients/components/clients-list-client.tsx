@@ -115,6 +115,14 @@ export const ClientsListClient = ({
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 bg-black/30 z-50" />
             <Dialog.Content className="fixed left-1/2 top-1/2 max-h-[90vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded bg-white dark:bg-gray-900 p-6 shadow-lg z-50 focus:outline-none">
+              <Dialog.Title className="text-lg font-semibold mb-4">
+                {editClient ? "Edit Client" : "Add New Client"}
+              </Dialog.Title>
+              <Dialog.Description className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                {editClient
+                  ? "Edit the client details."
+                  : "Create a new client."}
+              </Dialog.Description>
               <ClientForm
                 initialClient={editClient || {}}
                 onSubmit={async (data) => {

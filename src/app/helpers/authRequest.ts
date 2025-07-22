@@ -35,7 +35,7 @@ export async function authRequest(endpoint: string, options: RequestInit = {}) {
     }
     return JSON.parse(text);
   } catch (error: any) {
-    console.error("Error in authRequest:", error);
+    // console.error("Error in authRequest:", error);
     throw new Error(
       error.message || "An error occurred while making the request."
     );

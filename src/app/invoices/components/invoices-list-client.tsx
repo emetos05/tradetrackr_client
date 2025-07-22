@@ -132,6 +132,14 @@ export function InvoicesListClient({
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 bg-black/30 z-50" />
             <Dialog.Content className="fixed left-1/2 top-1/2 max-h-[90vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded bg-white dark:bg-gray-900 p-6 shadow-lg z-50 focus:outline-none">
+              <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                {editInvoice ? "Edit Invoice" : "Add New Invoice"}
+              </Dialog.Title>
+              <Dialog.Description className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                {editInvoice
+                  ? "Edit the invoice details"
+                  : "Create a new invoice"}
+              </Dialog.Description>
               <InvoiceForm
                 initialInvoice={editInvoice || {}}
                 clients={clients}

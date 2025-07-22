@@ -54,7 +54,10 @@
 - [ ] **Testing**
 
   - Write unit and integration tests for CRUD, auth, dashboard
-  - Use React Testing Library and/or Cypress
+  - Use React Testing Library and Playwright
+  - Added Jest configuration for unit and integration tests
+  - Added Playwright configuration for end-to-end tests
+  - Created example tests for utilities and components
 
 - [ ] **Documentation**
   - Document all frontend components, flows, and API integration points

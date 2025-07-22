@@ -93,7 +93,11 @@ export const InvoiceForm = ({
     setIsLoading(true);
     setHasError(null);
     setFieldErrors({});
-    const result = invoiceSchema.safeParse(form);
+    const result = invoiceSchema.safeParse({
+      ...form,
+      // Ensure empty strings are handled properly for validation
+      amount: form.amount || undefined,
+    });
     if (!result.success) {
       const errors: Partial<Record<keyof InvoiceFormData, string>> = {};
       result.error.errors.forEach((err) => {
@@ -249,13 +253,13 @@ export const InvoiceForm = ({
           onChange={(e) =>
             setForm((f) => ({ ...f, issueDate: e.target.value }))
           }
-          disabled={isLoading}
           className={`input input-bordered w-full ${
             fieldErrors.issueDate
               ? "ring-2 ring-red-500"
               : "focus:ring-2 focus:ring-blue-500"
           }`}
           required
+          disabled={isLoading}
           aria-invalid={!!fieldErrors.issueDate}
           aria-describedby={
             fieldErrors.issueDate ? "issueDate-error" : undefined

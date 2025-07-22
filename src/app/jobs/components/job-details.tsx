@@ -24,6 +24,12 @@ export const JobDetails = ({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/30 z-50" />
         <Dialog.Content className="fixed left-1/2 top-1/2 max-h-[90vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded bg-white dark:bg-gray-900 p-6 shadow-lg z-50 focus:outline-none">
+          <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Job Details
+          </Dialog.Title>
+          <Dialog.Description className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            View job information
+          </Dialog.Description>
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <BriefcaseIcon className="w-6 h-6 text-blue-500" />
