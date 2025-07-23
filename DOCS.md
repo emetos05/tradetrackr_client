@@ -7,10 +7,6 @@ This document provides detailed technical information for developers working on 
 - [Component Architecture](#component-architecture)
 - [State Management Patterns](#state-management-patterns)
 - [Form Handling & Validation](#form-handling--validation)
-- [API Integration Patterns](#api-integration-patterns)
-- [Authentication Implementation](#authentication-implementation)
-- [Error Handling Strategy](#error-handling-strategy)
-- [Testing Guidelines](#testing-guidelines)
 - [Performance Considerations](#performance-considerations)
 - [Development Workflows](#development-workflows)
 
