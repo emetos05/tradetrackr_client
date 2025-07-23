@@ -51,7 +51,7 @@
   - Integrate metadata for all pages using Next.js metadata exports
   - Ensure unique, descriptive titles and meta descriptions
 
-- [ ] **Testing**
+- [x] **Testing**
 
   - Write unit and integration tests for CRUD, auth, dashboard
   - Use React Testing Library and Playwright
