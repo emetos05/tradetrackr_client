@@ -37,6 +37,7 @@ yarn-error.log*
 next-env.d.ts
 tradetrackr_swagger.json
 FRONTEND_TODO.md
+PHASES_3-5_TODO.md
 
 # Playwright
 node_modules/
