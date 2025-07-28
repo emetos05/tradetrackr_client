@@ -61,9 +61,7 @@ jest.mock("@/app/lib/actions", () => ({
 
 describe("JobsListClient", () => {
   it("renders jobs list correctly", () => {
-    const { container } = render(
-      <JobsListClient initialJobs={mockJobs} clients={mockClients} />
-    );
+    render(<JobsListClient initialJobs={mockJobs} clients={mockClients} />);
 
     // Check if job titles are rendered
     mockJobs.forEach((job) => {

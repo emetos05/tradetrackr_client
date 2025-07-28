@@ -33,10 +33,11 @@ export async function authRequest(endpoint: string, options: RequestInit = {}) {
       return null;
     }
     return JSON.parse(text);
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     // console.error("Error in authRequest:", error);
     throw new Error(
-      error.message || "An error occurred while making the request."
+      (error as Error).message ||
+        "An error occurred while making the API request."
     );
   }
 }

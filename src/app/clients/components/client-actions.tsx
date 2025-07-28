@@ -28,8 +28,8 @@ export const ClientActions = ({
     try {
       await onDelete();
       setShowConfirm(false);
-    } catch (err: any) {
-      setError(err.message || "Failed to delete client");
+    } catch (err: Error | unknown) {
+      setError((err as Error).message || "Failed to delete client");
     } finally {
       setIsDeleting(false);
     }

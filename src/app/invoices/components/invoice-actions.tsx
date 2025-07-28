@@ -28,8 +28,8 @@ export const InvoiceActions = ({
     try {
       await onDelete();
       setShowConfirm(false);
-    } catch (err: any) {
-      setError(err.message || "Failed to delete invoice");
+    } catch (err: Error | unknown) {
+      setError((err as Error).message || "Failed to delete invoice");
     } finally {
       setIsDeleting(false);
     }

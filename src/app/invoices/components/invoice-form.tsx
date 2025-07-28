@@ -123,8 +123,8 @@ export const InvoiceForm = ({
         amount: result.data.amount,
       };
       await onSubmit(payload as Omit<Invoice, "id">);
-    } catch (err: any) {
-      setHasError(err.message || "Error");
+    } catch (err: Error | unknown) {
+      setHasError((err as Error).message || "Error");
     } finally {
       setIsLoading(false);
     }
@@ -225,7 +225,7 @@ export const InvoiceForm = ({
           aria-describedby={fieldErrors.status ? "status-error" : undefined}
         >
           {Object.entries(InvoiceStatus)
-            .filter(([k, v]) => !isNaN(Number(v)))
+            .filter(([_k, v]) => !isNaN(Number(v)))
             .map(([k, v]) => (
               <option key={v} value={v}>
                 {k}

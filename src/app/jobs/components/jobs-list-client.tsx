@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Job } from "../types/job";
 import { getJobStatusLabel, getClientName } from "../../helpers/getLabel";
 import { Client } from "@/app/clients/types/client";
@@ -79,8 +79,8 @@ export const JobsListClient = ({
       await reload();
       setShowForm(false);
       setEditJob(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to create job");
+    } catch (err: Error | unknown) {
+      setError((err as Error).message || "Failed to create job");
     } finally {
       setLoading(false);
     }
@@ -103,8 +103,8 @@ export const JobsListClient = ({
       await reload();
       setShowForm(false);
       setEditJob(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to update job");
+    } catch (err: Error | unknown) {
+      setError((err as Error).message || "Failed to update job");
     } finally {
       setLoading(false);
     }
@@ -116,8 +116,8 @@ export const JobsListClient = ({
     try {
       await deleteJob(id);
       await reload();
-    } catch (err: any) {
-      setError(err.message || "Failed to delete job");
+    } catch (err: Error | unknown) {
+      setError((err as Error).message || "Failed to delete job");
     } finally {
       setLoading(false);
     }

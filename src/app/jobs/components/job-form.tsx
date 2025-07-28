@@ -117,8 +117,8 @@ export const JobForm = ({
         materialCost: result.data.materialCost,
       };
       await onSubmit(payload as Omit<Job, "id">);
-    } catch (err: any) {
-      setHasError(err.message || "Error");
+    } catch (err: Error | unknown) {
+      setHasError((err as Error).message || "Error");
     } finally {
       setIsLoading(false);
     }

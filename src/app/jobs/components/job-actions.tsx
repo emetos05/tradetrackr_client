@@ -28,8 +28,8 @@ export const JobActions = ({
     try {
       await onDelete();
       setShowConfirm(false);
-    } catch (err: any) {
-      setError(err.message || "Failed to delete job");
+    } catch (err: Error | unknown) {
+      setError((err as Error).message || "Failed to delete job");
     } finally {
       setIsDeleting(false);
     }

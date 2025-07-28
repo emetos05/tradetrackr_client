@@ -55,8 +55,8 @@ export const ClientsListClient = ({
       await reload();
       setShowForm(false);
       setEditClient(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to create client");
+    } catch (err: Error | unknown) {
+      setError((err as Error).message || "Failed to create client");
     } finally {
       setLoading(false);
     }
@@ -70,8 +70,8 @@ export const ClientsListClient = ({
       await reload();
       setEditClient(null);
       setShowForm(false);
-    } catch (err: any) {
-      setError(err.message || "Failed to update client");
+    } catch (err: Error | unknown) {
+      setError((err as Error).message || "Failed to update client");
     } finally {
       setLoading(false);
     }
@@ -83,8 +83,8 @@ export const ClientsListClient = ({
     try {
       await deleteClient(id);
       await reload();
-    } catch (err: any) {
-      setError(err.message || "Failed to delete client");
+    } catch (err: Error | unknown) {
+      setError((err as Error).message || "Failed to delete client");
     } finally {
       setLoading(false);
     }

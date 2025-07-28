@@ -4,7 +4,7 @@ import { authRequest } from "@/app/helpers/authRequest";
 import { Client } from "@/app/clients/types/client";
 import { revalidatePath } from "next/cache";
 import { Job } from "@/app/jobs/types/job";
-import { Invoice, InvoiceStatus } from "@/app/invoices/types/invoice";
+import { Invoice } from "@/app/invoices/types/invoice";
 
 export async function getClients(): Promise<Client[]> {
   return await authRequest("Clients");

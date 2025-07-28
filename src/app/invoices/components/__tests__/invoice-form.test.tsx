@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { InvoiceForm } from "../invoice-form";
 import { Invoice, InvoiceStatus } from "../../types/invoice";
 import userEvent from "@testing-library/user-event";

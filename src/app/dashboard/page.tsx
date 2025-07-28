@@ -7,7 +7,6 @@ import {
   BriefcaseIcon,
   DocumentTextIcon,
   CurrencyDollarIcon,
-  ClockIcon,
 } from "@heroicons/react/24/outline";
 import { getJobTitle } from "../helpers/getLabel";
 

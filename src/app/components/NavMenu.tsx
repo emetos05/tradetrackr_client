@@ -13,10 +13,17 @@ interface NavProps {
   isAuthenticated?: boolean;
 }
 
+type SearchResult = {
+  type: "client" | "job" | "invoice";
+  id: string;
+  name: string;
+  href: string;
+};
+
 export default function Nav({ isAuthenticated = false }: NavProps) {
   const pathname = usePathname();
   const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();

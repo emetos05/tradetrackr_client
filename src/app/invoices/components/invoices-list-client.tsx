@@ -69,8 +69,8 @@ export function InvoicesListClient({
       await reload();
       setShowForm(false);
       setEditInvoice(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to create invoice");
+    } catch (err: Error | unknown) {
+      setError((err as Error).message || "Failed to create invoice");
     } finally {
       setLoading(false);
     }
@@ -88,8 +88,8 @@ export function InvoicesListClient({
       await reload();
       setShowForm(false);
       setEditInvoice(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to update invoice");
+    } catch (err: Error | unknown) {
+      setError((err as Error).message || "Failed to update invoice");
     } finally {
       setLoading(false);
     }
@@ -101,8 +101,8 @@ export function InvoicesListClient({
     try {
       await deleteInvoice(id);
       await reload();
-    } catch (err: any) {
-      setError(err.message || "Failed to delete invoice");
+    } catch (err: Error | unknown) {
+      setError((err as Error).message || "Failed to delete invoice");
     } finally {
       setLoading(false);
     }

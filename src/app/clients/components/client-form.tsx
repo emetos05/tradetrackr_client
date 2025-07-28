@@ -92,8 +92,8 @@ export const ClientForm = ({
           : "",
       };
       await onSubmit(payload as Omit<Client, "id">);
-    } catch (err: any) {
-      setHasError(err.message || "Error");
+    } catch (err: Error | unknown) {
+      setHasError((err as Error).message || "Failed to create client");
     } finally {
       setIsLoading(false);
     }

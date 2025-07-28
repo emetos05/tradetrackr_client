@@ -28,8 +28,6 @@ describe("authRequest", () => {
       headers: new Headers({ "content-length": "123" }),
     } as Response);
 
-    const result = await authRequest("test-endpoint");
-
     expect(global.fetch).toHaveBeenCalledWith(
       "http://localhost:5267/api/test-endpoint",
       expect.objectContaining({
