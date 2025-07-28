@@ -1,8 +1,7 @@
 "use server";
 import { cookies } from "next/headers";
 
-// const API_URL = process.env.API_BASE_URL || "https://localhost:44395/api";
-const API_URL = "http://localhost:5267/api/";
+const API_URL = process.env.API_BASE_URL;
 
 export async function authRequest(endpoint: string, options: RequestInit = {}) {
   try {

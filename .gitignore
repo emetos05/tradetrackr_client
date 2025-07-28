@@ -35,9 +35,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Project documentation and planning files
 tradetrackr_swagger.json
 FRONTEND_TODO.md
-PHASES_3-5_TODO.md
+PHASES_3-5_TODO_adv.md
+PHASE_3_TODO.md
+PHASE_4_TODO.md
+PHASE_5_TODO.md
+LAUNCH_CHECKLIST.md
 
 # Playwright
 node_modules/
@@ -46,3 +52,5 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 e2e/.auth/
+
+certificates
