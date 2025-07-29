@@ -189,23 +189,23 @@ export default function Nav({ isAuthenticated = false }: NavProps) {
         )}
         {!isAuthenticated ? (
           <>
-            <Link
+            <a
               href="/auth/login?returnTo=/dashboard"
               className={styles.loginBtn}
             >
               <span className="text-sm sm:text-base">Log In</span>
-            </Link>
-            <Link
+            </a>
+            <a
               href="/auth/login?screen_hint=signup"
               className={styles.signupBtn}
             >
               <span className="text-sm sm:text-base">Sign Up</span>
-            </Link>
+            </a>
           </>
         ) : (
-          <Link href="/auth/logout" className={styles.logoutBtn}>
+          <a href="/auth/logout" className={styles.logoutBtn}>
             <span className="text-sm sm:text-base">Log Out</span>
-          </Link>
+          </a>
         )}
       </div>
     </nav>
