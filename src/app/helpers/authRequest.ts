@@ -5,9 +5,21 @@ const API_URL = process.env.API_BASE_URL;
 
 export async function authRequest(endpoint: string, options: RequestInit = {}) {
   try {
+    // Validate API_URL before using it
+    if (!API_URL) {
+      throw new Error("API_BASE_URL environment variable is not set");
+    }
+
     const accessToken = cookies().get("access_token")?.value;
 
-    const res = await fetch(`${API_URL}${endpoint}`, {
+    // Ensure API_URL ends with / and endpoint doesn't start with /
+    const baseUrl = API_URL.endsWith("/") ? API_URL : `${API_URL}/`;
+    const cleanEndpoint = endpoint.startsWith("/")
+      ? endpoint.slice(1)
+      : endpoint;
+    const fullUrl = `${baseUrl}${cleanEndpoint}`;
+
+    const res = await fetch(fullUrl, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
