@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { siteConfig } from "./metadata.config";
-
 import localFont from "next/font/local";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import Nav from "./components/NavMenu";
 import { auth0 } from "./lib/auth0";
@@ -70,6 +71,8 @@ export default async function RootLayout({
       >
         <Nav isAuthenticated={isAuthenticated} />
         <Suspense fallback={<GlobalLoading />}>{children}</Suspense>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
