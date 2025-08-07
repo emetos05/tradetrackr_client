@@ -109,3 +109,30 @@ export async function deleteInvoice(id: string): Promise<void> {
   });
   revalidatePath("/invoices");
 }
+
+export async function updateInvoiceStatus(
+  id: string,
+  status: number
+): Promise<void> {
+  await authRequest(`Invoices/${id}/status`, {
+    method: "PUT",
+    body: JSON.stringify({ status }),
+  });
+
+  revalidatePath("/invoices");
+  revalidatePath("/dashboard");
+}
+
+export async function recordInvoicePayment(
+  id: string,
+  payment: { paymentDate: string; amount: number }
+): Promise<void> {
+  await authRequest(`Invoices/${id}/payment`, {
+    method: "POST",
+    body: JSON.stringify(payment),
+  });
+  // Revalidate all pages that might show invoice data
+  revalidatePath("/invoices");
+  revalidatePath("/dashboard");
+  revalidatePath(`/invoices/${id}`);
+}

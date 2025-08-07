@@ -3,6 +3,7 @@ import { Button } from "@/app/components/ui/button";
 import { useState, useRef, useEffect } from "react";
 import { Job, JobStatus } from "../types/job";
 import { Client } from "@/app/clients/types/client";
+import { createJob, updateJob, JobDto } from "@/app/lib/actions";
 import { z } from "zod";
 
 const jobSchema = z.object({
@@ -19,10 +20,23 @@ const jobSchema = z.object({
 
 type JobFormData = z.infer<typeof jobSchema>;
 
+// Utility to build JobDto payload for API
+const buildJobPayload = (data: Omit<Job, "id">): JobDto => ({
+  clientId: data.clientId,
+  title: data.title,
+  description: data.description,
+  status: typeof data.status === "number" ? data.status : Number(data.status),
+  createdAt: data.createdAt,
+  completedAt: data.completedAt ? data.completedAt : null,
+  hourlyRate: data.hourlyRate,
+  hoursWorked: data.hoursWorked,
+  materialCost: data.materialCost,
+});
+
 interface JobFormProps {
   initialJob?: Partial<Job>;
   clients: Client[];
-  onSubmit: (job: Omit<Job, "id">) => Promise<void>;
+  onSuccess?: () => void;
   onCancel?: () => void;
   title?: string;
 }
@@ -30,7 +44,7 @@ interface JobFormProps {
 export const JobForm = ({
   initialJob = {},
   clients,
-  onSubmit,
+  onSuccess,
   onCancel,
   title = "Job Details",
 }: JobFormProps) => {
@@ -116,7 +130,23 @@ export const JobForm = ({
         hoursWorked: result.data.hoursWorked,
         materialCost: result.data.materialCost,
       };
-      await onSubmit(payload as Omit<Job, "id">);
+
+      // Build API payload and make the call
+      const jobPayload = buildJobPayload({
+        ...payload,
+        createdAt: payload.createdAt || new Date().toISOString(),
+        completedAt: payload.completedAt || null,
+      });
+
+      if (initialJob?.id) {
+        await updateJob(initialJob.id, jobPayload);
+      } else {
+        await createJob(jobPayload);
+      }
+
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (err: Error | unknown) {
       setHasError((err as Error).message || "Error");
     } finally {

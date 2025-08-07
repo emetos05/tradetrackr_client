@@ -6,13 +6,7 @@ import { Client } from "@/app/clients/types/client";
 import { JobForm } from "./job-form";
 import { JobActions } from "./job-actions";
 import { Button } from "@/app/components/ui/button";
-import {
-  createJob,
-  updateJob,
-  deleteJob,
-  getJobs,
-  JobDto,
-} from "@/app/lib/actions";
+import { deleteJob, getJobs } from "@/app/lib/actions";
 import * as Dialog from "@radix-ui/react-dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { X } from "lucide-react";
@@ -23,19 +17,6 @@ interface JobsListClientProps {
   initialJobs: Job[];
   clients: Client[];
 }
-
-// Utility to build JobDto payload for API
-const buildJobPayload = (data: Omit<Job, "id">): JobDto => ({
-  clientId: data.clientId,
-  title: data.title,
-  description: data.description,
-  status: typeof data.status === "number" ? data.status : Number(data.status),
-  createdAt: data.createdAt,
-  completedAt: data.completedAt ? data.completedAt : null,
-  hourlyRate: data.hourlyRate,
-  hoursWorked: data.hoursWorked,
-  materialCost: data.materialCost,
-});
 
 export const JobsListClient = ({
   initialJobs,
@@ -62,53 +43,6 @@ export const JobsListClient = ({
       getJobStatusLabel(job.status).toLowerCase().includes(q)
     );
   });
-
-  const handleCreate = async (data: Omit<Job, "id">) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await createJob(
-        buildJobPayload({
-          ...data,
-          createdAt: new Date(data.createdAt).toISOString(),
-          completedAt: data.completedAt
-            ? new Date(data.completedAt).toISOString()
-            : null,
-        })
-      );
-      await reload();
-      setShowForm(false);
-      setEditJob(null);
-    } catch (err: Error | unknown) {
-      setError((err as Error).message || "Failed to create job");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEdit = async (id: string, data: Omit<Job, "id">) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await updateJob(
-        id,
-        buildJobPayload({
-          ...data,
-          createdAt: new Date(data.createdAt).toISOString(),
-          completedAt: data.completedAt
-            ? new Date(data.completedAt).toISOString()
-            : null,
-        })
-      );
-      await reload();
-      setShowForm(false);
-      setEditJob(null);
-    } catch (err: Error | unknown) {
-      setError((err as Error).message || "Failed to update job");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDelete = async (id: string) => {
     setLoading(true);
@@ -162,12 +96,12 @@ export const JobsListClient = ({
               <JobForm
                 initialJob={editJob || {}}
                 clients={clients}
-                onSubmit={async (data) => {
-                  if (editJob && editJob.id) {
-                    await handleEdit(editJob.id, data);
-                  } else {
-                    await handleCreate(data);
-                  }
+                onSuccess={async () => {
+                  // The form handles the data submission internally
+                  // We just need to reload the list and close the form
+                  await reload();
+                  setShowForm(false);
+                  setEditJob(null);
                 }}
                 onCancel={() => {
                   setShowForm(false);
