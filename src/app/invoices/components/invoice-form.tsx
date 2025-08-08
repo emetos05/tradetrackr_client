@@ -85,7 +85,7 @@ export function InvoiceForm({
     };
   }, [formData.amount, formData.taxRate]);
 
-  const handleInputChange = (field: keyof InvoiceFormData, value: any) => {
+  const handleInputChange = (field: keyof InvoiceFormData, value: unknown) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,

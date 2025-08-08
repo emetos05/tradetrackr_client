@@ -5,13 +5,8 @@ import { Input } from "@/app/components/ui/input";
 import { Badge } from "@/app/components/ui/badge";
 import * as Dialog from "@radix-ui/react-dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { X, DollarSign, Calendar, CheckCircle } from "lucide-react";
-import {
-  Invoice,
-  InvoiceStatus,
-  UpdateInvoiceStatusRequest,
-  RecordPaymentRequest,
-} from "../types/invoice";
+import { X, DollarSign, CheckCircle } from "lucide-react";
+import { Invoice, InvoiceStatus, RecordPaymentRequest } from "../types/invoice";
 import {
   getInvoiceStatusLabel,
   getInvoiceStatusBadgeVariant,
@@ -158,7 +153,7 @@ export const PaymentActions = ({
         className="flex items-center gap-1"
       >
         <Badge
-          variant={getInvoiceStatusBadgeVariant(optimisticStatus) as any}
+          variant={getInvoiceStatusBadgeVariant(optimisticStatus) || "default"}
           className="text-xs"
         >
           {getInvoiceStatusLabel(optimisticStatus)}
@@ -188,7 +183,8 @@ export const PaymentActions = ({
                   Current status:{" "}
                   <Badge
                     variant={
-                      getInvoiceStatusBadgeVariant(optimisticStatus) as any
+                      getInvoiceStatusBadgeVariant(optimisticStatus) ||
+                      "default"
                     }
                   >
                     {getInvoiceStatusLabel(optimisticStatus)}
@@ -206,7 +202,8 @@ export const PaymentActions = ({
                     >
                       <Badge
                         variant={
-                          getInvoiceStatusBadgeVariant(option.value) as any
+                          getInvoiceStatusBadgeVariant(option.value) ||
+                          "default"
                         }
                         className="mr-2"
                       >

@@ -298,7 +298,7 @@ export default function Nav({ isAuthenticated = false }: NavProps) {
                       </li>
                     ) : searchResults.length === 0 && search.length >= 2 ? (
                       <li className="text-gray-500 px-3 py-4 text-center">
-                        No results found for "{search}"
+                        No results found for &quot;{search}&quot;
                       </li>
                     ) : search.length < 2 ? (
                       <li className="text-gray-500 px-3 py-4 text-center">

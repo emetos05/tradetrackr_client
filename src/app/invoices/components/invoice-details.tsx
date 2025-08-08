@@ -107,7 +107,9 @@ export const InvoiceDetails = ({
                 </div>
               </div>
               <Badge
-                variant={getInvoiceStatusBadgeVariant(invoice.status) as any}
+                variant={
+                  getInvoiceStatusBadgeVariant(invoice.status) || "default"
+                }
               >
                 {getInvoiceStatusLabel(invoice.status)}
               </Badge>
