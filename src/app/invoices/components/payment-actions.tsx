@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Badge } from "@/app/components/ui/badge";
@@ -39,6 +39,10 @@ export const PaymentActions = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Optimistic state for status to immediately reflect UI changes
+  const [optimisticStatus, setOptimisticStatus] = useState(invoice.status);
+  const isOptimisticRef = useRef(false);
+
   // Payment form state
   const [paymentAmount, setPaymentAmount] = useState(invoice.totalAmount);
   const [paymentDate, setPaymentDate] = useState(
@@ -46,16 +50,29 @@ export const PaymentActions = ({
   );
 
   const handleStatusUpdate = async (newStatus: InvoiceStatus) => {
-    setIsLoading(true);
+    if (!invoice.id) {
+      setError("Missing invoice ID");
+      return;
+    }
+    const prevStatus = optimisticStatus;
+    // Start optimistic update
     setError(null);
+    setIsLoading(true);
+    isOptimisticRef.current = true;
+    setOptimisticStatus(newStatus);
+    // Close immediately for a snappy feel
+    setShowStatusModal(false);
+
     try {
-      if (invoice.id) {
-        await onStatusUpdate(invoice.id, newStatus);
-        setShowStatusModal(false);
-      }
+      await onStatusUpdate(invoice.id, newStatus);
     } catch (err) {
+      // Rollback on failure
+      setOptimisticStatus(prevStatus);
       setError((err as Error).message || "Failed to update status");
+      // Re-open to let the user retry/change
+      setShowStatusModal(true);
     } finally {
+      isOptimisticRef.current = false;
       setIsLoading(false);
     }
   };
@@ -71,22 +88,45 @@ export const PaymentActions = ({
       return;
     }
 
+    if (!invoice.id) {
+      setError("Missing invoice ID");
+      return;
+    }
+
+    const prevStatus = optimisticStatus;
     setIsLoading(true);
     setError(null);
+    isOptimisticRef.current = true;
+    // Optimistically mark as Paid only if payment covers total
+    if (paymentAmount >= invoice.totalAmount) {
+      setOptimisticStatus(InvoiceStatus.Paid);
+    }
+    setShowPaymentModal(false);
+
     try {
-      if (invoice.id) {
-        await onPaymentRecord(invoice.id, {
-          amount: paymentAmount,
-          paymentDate: new Date(paymentDate).toISOString(),
-        });
-        setShowPaymentModal(false);
-      }
+      await onPaymentRecord(invoice.id, {
+        amount: paymentAmount,
+        paymentDate: new Date(paymentDate).toISOString(),
+      });
     } catch (err) {
+      // Rollback on failure
+      setOptimisticStatus(prevStatus);
       setError((err as Error).message || "Failed to record payment");
+      // Re-open so the user can adjust/retry
+      setShowPaymentModal(true);
     } finally {
+      isOptimisticRef.current = false;
       setIsLoading(false);
     }
   };
+
+  // Keep optimistic status in sync with prop when not mid-optimistic update
+  useEffect(() => {
+    if (!isOptimisticRef.current) {
+      setOptimisticStatus(invoice.status);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoice.status]);
 
   const statusOptions = [
     { value: InvoiceStatus.Draft, label: "Draft", disabled: false },
@@ -94,12 +134,12 @@ export const PaymentActions = ({
     { value: InvoiceStatus.Paid, label: "Paid", disabled: false },
     { value: InvoiceStatus.Overdue, label: "Overdue", disabled: false },
     { value: InvoiceStatus.Cancelled, label: "Cancelled", disabled: false },
-  ].filter((option) => option.value !== invoice.status);
+  ].filter((option) => option.value !== optimisticStatus);
 
   return (
     <div className={`flex gap-2 ${className || ""}`}>
       {/* Quick Status Actions */}
-      {invoice.status !== InvoiceStatus.Paid && (
+      {optimisticStatus !== InvoiceStatus.Paid && (
         <Button
           size="sm"
           variant="outline"
@@ -118,10 +158,10 @@ export const PaymentActions = ({
         className="flex items-center gap-1"
       >
         <Badge
-          variant={getInvoiceStatusBadgeVariant(invoice.status) as any}
+          variant={getInvoiceStatusBadgeVariant(optimisticStatus) as any}
           className="text-xs"
         >
-          {getInvoiceStatusLabel(invoice.status)}
+          {getInvoiceStatusLabel(optimisticStatus)}
         </Badge>
         Change Status
       </Button>
@@ -148,10 +188,10 @@ export const PaymentActions = ({
                   Current status:{" "}
                   <Badge
                     variant={
-                      getInvoiceStatusBadgeVariant(invoice.status) as any
+                      getInvoiceStatusBadgeVariant(optimisticStatus) as any
                     }
                   >
-                    {getInvoiceStatusLabel(invoice.status)}
+                    {getInvoiceStatusLabel(optimisticStatus)}
                   </Badge>
                 </p>
 

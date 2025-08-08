@@ -26,6 +26,10 @@ interface InvoiceDetailsProps {
   isOpen: boolean;
   onClose: () => void;
   onInvoiceUpdate?: () => void;
+  onInvoiceOptimisticUpdate?: (
+    invoiceId: string,
+    patch: Partial<Invoice>
+  ) => void;
 }
 
 export const InvoiceDetails = ({
@@ -35,6 +39,7 @@ export const InvoiceDetails = ({
   isOpen,
   onClose,
   onInvoiceUpdate,
+  onInvoiceOptimisticUpdate,
 }: InvoiceDetailsProps) => {
   const isOverdue = isInvoiceOverdue(invoice.dueDate, invoice.status);
   const daysUntilDue = getDaysUntilDue(invoice.dueDate);
@@ -43,9 +48,17 @@ export const InvoiceDetails = ({
     invoiceId: string,
     status: InvoiceStatus
   ) => {
-    await updateInvoiceStatus(invoiceId, status);
-    if (onInvoiceUpdate) {
-      onInvoiceUpdate();
+    // Optimistic: update status immediately across views
+    onInvoiceOptimisticUpdate?.(invoiceId, {
+      status,
+      // Clear payment date if moving away from Paid
+      ...(status !== InvoiceStatus.Paid ? { paymentDate: undefined } : {}),
+    });
+    try {
+      await updateInvoiceStatus(invoiceId, status);
+    } finally {
+      // Reload to sync derived fields (isPaid, totals, etc.)
+      onInvoiceUpdate?.();
     }
   };
 
@@ -53,9 +66,17 @@ export const InvoiceDetails = ({
     invoiceId: string,
     payment: RecordPaymentRequest
   ) => {
-    await recordInvoicePayment(invoiceId, payment);
-    if (onInvoiceUpdate) {
-      onInvoiceUpdate();
+    // Optimistic: if payment covers total, mark as Paid and set payment date
+    const willBePaid = payment.amount >= invoice.totalAmount;
+    onInvoiceOptimisticUpdate?.(invoiceId, {
+      ...(willBePaid ? { status: InvoiceStatus.Paid } : {}),
+      paymentDate: payment.paymentDate,
+    });
+    try {
+      await recordInvoicePayment(invoiceId, payment);
+    } finally {
+      // Reload to ensure full consistency
+      onInvoiceUpdate?.();
     }
   };
 
@@ -195,7 +216,7 @@ export const InvoiceDetails = ({
                       ? new Date(invoice.dueDate).toLocaleDateString()
                       : "-"}
                   </p>
-                  {!invoice.isPaid && (
+                  {invoice.status !== InvoiceStatus.Paid && (
                     <p
                       className={`text-xs ${
                         isOverdue

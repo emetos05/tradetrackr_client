@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Invoice } from "../types/invoice";
+import { Invoice, InvoiceStatus } from "../types/invoice";
 import {
   getInvoiceStatusLabel,
   getInvoiceStatusBadgeVariant,
@@ -45,6 +45,7 @@ export const InvoicesListClient = ({
   const reload = async () => {
     const latest = await getInvoices();
     setInvoices(latest);
+    return latest;
   };
 
   const filtered = invoices.filter((invoice) => {
@@ -71,6 +72,16 @@ export const InvoicesListClient = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  // Apply optimistic patch across list and details selection
+  const applyOptimisticPatch = (invoiceId: string, patch: Partial<Invoice>) => {
+    setInvoices((prev) =>
+      prev.map((inv) => (inv.id === invoiceId ? { ...inv, ...patch } : inv))
+    );
+    setSelectedInvoice((prev) =>
+      prev && prev.id === invoiceId ? { ...prev, ...patch } : prev
+    );
   };
 
   return (
@@ -235,7 +246,7 @@ export const InvoicesListClient = ({
                           ? new Date(invoice.dueDate).toLocaleDateString()
                           : "-"}
                       </span>
-                      {!invoice.isPaid && (
+                      {invoice.status !== InvoiceStatus.Paid && (
                         <span
                           className={`ml-1 ${
                             isOverdue
@@ -309,15 +320,16 @@ export const InvoicesListClient = ({
           isOpen={!!selectedInvoice}
           onClose={() => setSelectedInvoice(null)}
           onInvoiceUpdate={async () => {
-            await reload();
+            const latest = await reload();
             // Update the selected invoice with fresh data
-            const updatedInvoice = invoices.find(
+            const updatedInvoice = latest.find(
               (inv) => inv.id === selectedInvoice.id
             );
             if (updatedInvoice) {
               setSelectedInvoice(updatedInvoice);
             }
           }}
+          onInvoiceOptimisticUpdate={applyOptimisticPatch}
         />
       )}
     </div>
