@@ -1,392 +1,447 @@
 "use client";
-import { Button } from "@/app/components/ui/button";
-import { useState, useRef, useEffect } from "react";
-import { Invoice, InvoiceStatus } from "../types/invoice";
-import { Job } from "@/app/jobs/types/job";
-import { Client } from "@/app/clients/types/client";
+
+import React, { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
-
-const invoiceSchema = z.object({
-  clientId: z.string().min(1, "Client is required"),
-  jobId: z.string().optional(),
-  status: z.nativeEnum(InvoiceStatus),
-  issueDate: z.string().min(1, "Issue date is required"),
-  dueDate: z.string().min(1, "Due date is required"),
-  amount: z.coerce.number().min(0, "Amount is required"),
-});
-
-type InvoiceFormData = z.infer<typeof invoiceSchema>;
+import { Invoice, InvoiceStatus } from "../types/invoice";
+import { Client } from "@/app/clients/types/client";
+import { Job } from "@/app/jobs/types/job";
+import { createInvoice, updateInvoice } from "@/app/lib/actions";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Textarea } from "@/app/components/ui/textarea";
 
 interface InvoiceFormProps {
-  initialInvoice?: Partial<Invoice>;
+  invoice?: Partial<Invoice>;
   clients: Client[];
   jobs: Job[];
-  onSubmit: (data: Omit<Invoice, "id">) => Promise<void>;
+  onSuccess?: () => void;
   onCancel?: () => void;
-  title?: string;
 }
 
-export const InvoiceForm = ({
-  initialInvoice,
+const invoiceFormSchema = z
+  .object({
+    clientId: z.string().min(1, "Client is required"),
+    jobId: z.string().optional(),
+    issueDate: z.string().min(1, "Issue date is required"),
+    dueDate: z.string().min(1, "Due date is required"),
+    amount: z.number().min(0.01, "Amount must be greater than 0"),
+    taxRate: z.number().min(0).max(100, "Tax rate must be between 0 and 100"),
+    notes: z.string().optional(),
+    terms: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      const issueDate = new Date(data.issueDate);
+      const dueDate = new Date(data.dueDate);
+      return dueDate >= issueDate;
+    },
+    {
+      message: "Due date must be on or after issue date",
+      path: ["dueDate"],
+    }
+  );
+
+type InvoiceFormData = z.infer<typeof invoiceFormSchema>;
+
+export function InvoiceForm({
+  invoice,
   clients,
   jobs,
-  onSubmit,
+  onSuccess,
   onCancel,
-  title = "Invoice Details",
-}: InvoiceFormProps) => {
-  const [form, setForm] = useState<InvoiceFormData>({
-    clientId: initialInvoice?.clientId || "",
-    jobId: initialInvoice?.jobId || "",
-    status: initialInvoice?.status ?? InvoiceStatus.Draft,
-    issueDate: initialInvoice?.issueDate
-      ? initialInvoice?.issueDate.slice(0, 10)
-      : "",
-    dueDate: initialInvoice?.dueDate
-      ? initialInvoice?.dueDate.slice(0, 10)
-      : "",
-    amount: initialInvoice?.amount ?? 0,
-  });
+}: InvoiceFormProps) {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [hasError, setHasError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<
-    Partial<Record<keyof InvoiceFormData, string>>
-  >({});
-  const clientInputRef = useRef<HTMLSelectElement>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    clientInputRef.current?.focus();
-  }, []);
+  const [formData, setFormData] = useState<InvoiceFormData>({
+    clientId: invoice?.clientId || "",
+    jobId: invoice?.jobId || undefined,
+    issueDate:
+      invoice?.issueDate?.split("T")[0] ||
+      new Date().toISOString().split("T")[0],
+    dueDate: invoice?.dueDate?.split("T")[0] || "",
+    amount: invoice?.amount || 0,
+    taxRate: invoice?.taxRate || 0,
+    notes: invoice?.notes || "",
+    terms: invoice?.terms || "",
+  });
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Enter" && !isLoading) {
-        (document.activeElement as HTMLElement)?.blur();
-      }
-      if (e.key === "Escape" && onCancel) {
-        onCancel();
-      }
+  // selectedClient variable removed as it's not used
+  const availableJobs = jobs.filter((j) => j.clientId === formData.clientId);
+
+  // Calculate tax and total amounts
+  const calculatedAmounts = useMemo(() => {
+    const subtotal = formData.amount || 0;
+    const taxRate = formData.taxRate || 0;
+    const taxAmount = (subtotal * taxRate) / 100;
+    const totalAmount = subtotal + taxAmount;
+
+    return {
+      subtotal,
+      taxAmount: Math.round(taxAmount * 100) / 100,
+      totalAmount: Math.round(totalAmount * 100) / 100,
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [isLoading, onCancel]);
+  }, [formData.amount, formData.taxRate]);
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({
+  const handleInputChange = (field: keyof InvoiceFormData, value: unknown) => {
+    setFormData((prev) => ({
       ...prev,
-      [name]: name === "amount" ? Number(value) : value,
+      [field]: value,
     }));
-    setFieldErrors((prev) => ({ ...prev, [name]: undefined }));
+
+    // Clear error when field is modified
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: "",
+      }));
+    }
   };
 
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: Number(e.target.value) });
-    setFieldErrors((prev) => ({ ...prev, [e.target.name]: undefined }));
+  const validateForm = (): boolean => {
+    try {
+      invoiceFormSchema.parse(formData);
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path.length > 0) {
+            newErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setHasError(null);
-    setFieldErrors({});
-    const result = invoiceSchema.safeParse({
-      ...form,
-      // Ensure empty strings are handled properly for validation
-      amount: form.amount || undefined,
-    });
-    if (!result.success) {
-      const errors: Partial<Record<keyof InvoiceFormData, string>> = {};
-      result.error.errors.forEach((err) => {
-        const field = err.path[0] as keyof InvoiceFormData;
-        errors[field] = err.message;
-      });
-      setFieldErrors(errors);
-      setIsLoading(false);
+
+    if (!validateForm()) {
       return;
     }
+
+    setIsLoading(true);
+
     try {
-      // Only send API-required fields, convert dates to ISO
-      const payload = {
-        clientId: result.data.clientId,
-        jobId: result.data.jobId,
-        status: result.data.status,
-        issueDate: result.data.issueDate
-          ? new Date(result.data.issueDate).toISOString()
-          : "",
-        dueDate: result.data.dueDate
-          ? new Date(result.data.dueDate).toISOString()
-          : "",
-        amount: result.data.amount,
+      const invoiceData: Omit<Invoice, "id"> = {
+        clientId: formData.clientId,
+        jobId: formData.jobId || undefined,
+        status: invoice?.status || InvoiceStatus.Draft,
+        issueDate: formData.issueDate,
+        dueDate: formData.dueDate,
+        amount: calculatedAmounts.subtotal,
+        taxRate: formData.taxRate,
+        taxAmount: calculatedAmounts.taxAmount,
+        totalAmount: calculatedAmounts.totalAmount,
+        notes: formData.notes || undefined,
+        terms: formData.terms || undefined,
+        // These will be calculated by the API
+        isOverdue: false,
+        isPaid: false,
+        daysUntilDue: 0,
       };
-      await onSubmit(payload as Omit<Invoice, "id">);
-    } catch (err: Error | unknown) {
-      setHasError((err as Error).message || "Error");
+
+      if (invoice?.id) {
+        await updateInvoice(invoice.id, invoiceData);
+      } else {
+        await createInvoice(invoiceData);
+      }
+
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push("/invoices");
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Error saving invoice:", error);
+      setErrors({ submit: "Failed to save invoice. Please try again." });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6 max-w-md mx-auto"
-      aria-labelledby="invoice-form-title"
-    >
-      <h2
-        id="invoice-form-title"
-        className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100"
-      >
-        {title}
-      </h2>
-      <div>
-        <label
-          htmlFor="clientId"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Client
-        </label>
-        <select
-          ref={clientInputRef}
-          id="clientId"
-          name="clientId"
-          value={form.clientId}
-          onChange={handleChange}
-          className={`input input-bordered w-full ${
-            fieldErrors.clientId
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          required
-          disabled={isLoading}
-          aria-invalid={!!fieldErrors.clientId}
-          aria-describedby={fieldErrors.clientId ? "clientId-error" : undefined}
-        >
-          <option value="">Select a Client</option>
-          {clients.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        {fieldErrors.clientId && (
-          <div id="clientId-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.clientId}
-          </div>
-        )}
-      </div>
-      <div>
-        <label
-          htmlFor="jobId"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Job (optional)
-        </label>
-        <select
-          id="jobId"
-          name="jobId"
-          value={form.jobId || ""}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-          disabled={isLoading}
-        >
-          <option value="">None</option>
-          {jobs.map((j) => (
-            <option key={j.id} value={j.id}>
-              {j.title}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label
-          htmlFor="status"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Status
-        </label>
-        <select
-          id="status"
-          name="status"
-          value={form.status}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, status: Number(e.target.value) }))
-          }
-          className={`input input-bordered w-full ${
-            fieldErrors.status
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          disabled={isLoading}
-          aria-invalid={!!fieldErrors.status}
-          aria-describedby={fieldErrors.status ? "status-error" : undefined}
-        >
-          {Object.entries(InvoiceStatus)
-            .filter(([_k, v]) => !isNaN(Number(v)))
-            .map(([k, v]) => (
-              <option key={v} value={v}>
-                {k}
-              </option>
-            ))}
-        </select>
-        {fieldErrors.status && (
-          <div id="status-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.status}
-          </div>
-        )}
-      </div>
-      <div>
-        <label
-          htmlFor="issueDate"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Issue Date
-        </label>
-        <input
-          type="date"
-          id="issueDate"
-          name="issueDate"
-          value={form.issueDate || ""}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, issueDate: e.target.value }))
-          }
-          className={`input input-bordered w-full ${
-            fieldErrors.issueDate
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          required
-          disabled={isLoading}
-          aria-invalid={!!fieldErrors.issueDate}
-          aria-describedby={
-            fieldErrors.issueDate ? "issueDate-error" : undefined
-          }
-        />
-        {fieldErrors.issueDate && (
-          <div id="issueDate-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.issueDate}
-          </div>
-        )}
-      </div>
-      <div>
-        <label
-          htmlFor="dueDate"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Due Date
-        </label>
-        <input
-          type="date"
-          id="dueDate"
-          name="dueDate"
-          value={form.dueDate || ""}
-          onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
-          disabled={isLoading}
-          className={`input input-bordered w-full ${
-            fieldErrors.dueDate
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          required
-          aria-invalid={!!fieldErrors.dueDate}
-          aria-describedby={fieldErrors.dueDate ? "dueDate-error" : undefined}
-        />
-        {fieldErrors.dueDate && (
-          <div id="dueDate-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.dueDate}
-          </div>
-        )}
-      </div>
-      <div>
-        <label
-          htmlFor="amount"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Amount ($)
-        </label>
-        <input
-          type="number"
-          id="amount"
-          name="amount"
-          min={0}
-          step={0.01}
-          placeholder="e.g. 20"
-          value={form.amount || ""}
-          onChange={handleNumberChange}
-          className={`input input-bordered w-full ${
-            fieldErrors.amount
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          required
-          disabled={isLoading}
-          aria-invalid={!!fieldErrors.amount}
-          aria-describedby={fieldErrors.amount ? "amount-error" : undefined}
-        />
-        {fieldErrors.amount && (
-          <div id="amount-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.amount}
-          </div>
-        )}
-      </div>
-      {hasError && (
-        <div
-          className="text-red-600 text-sm font-medium bg-red-50 border border-red-200 rounded p-2"
-          role="alert"
-        >
-          {hasError}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {errors.submit && (
+        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-md p-3">
+          <p className="text-sm text-red-600 dark:text-red-400">
+            {errors.submit}
+          </p>
         </div>
       )}
-      <div className="flex gap-2">
-        <Button
-          type="submit"
-          disabled={isLoading}
-          aria-busy={isLoading}
-          aria-label="Save invoice"
-        >
-          {isLoading ? (
-            <span className="flex items-center gap-2">
-              <svg
-                className="animate-spin h-4 w-4 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v8z"
-                ></path>
-              </svg>
-              Saving...
-            </span>
-          ) : (
-            "Save"
-          )}
-        </Button>
-        {onCancel && (
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onCancel}
-            disabled={isLoading}
-            aria-label="Cancel"
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Client Selection */}
+        <div>
+          <label
+            htmlFor="clientId"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
-            Cancel
-          </Button>
-        )}
+            Client *
+          </label>
+          <select
+            id="clientId"
+            value={formData.clientId}
+            onChange={(e) => {
+              const clientId = e.target.value;
+              handleInputChange("clientId", clientId);
+              // Reset job selection when client changes
+              if (
+                formData.jobId &&
+                !jobs.some(
+                  (j) => j.id === formData.jobId && j.clientId === clientId
+                )
+              ) {
+                handleInputChange("jobId", undefined);
+              }
+            }}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            required
+          >
+            <option value="">Select a client...</option>
+            {clients.map((client) => (
+              <option key={client.id} value={client.id}>
+                {client.name}
+              </option>
+            ))}
+          </select>
+          {errors.clientId && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {errors.clientId}
+            </p>
+          )}
+        </div>
+
+        {/* Job Selection */}
+        <div>
+          <label
+            htmlFor="jobId"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Job (Optional)
+          </label>
+          <select
+            id="jobId"
+            value={formData.jobId || ""}
+            onChange={(e) =>
+              handleInputChange(
+                "jobId",
+                e.target.value ? e.target.value : undefined
+              )
+            }
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            disabled={!formData.clientId}
+          >
+            <option value="">No job selected</option>
+            {availableJobs.map((job) => (
+              <option key={job.id} value={job.id}>
+                {job.title}
+              </option>
+            ))}
+          </select>
+          {formData.clientId && availableJobs.length === 0 && (
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              No jobs available for selected client
+            </p>
+          )}
+        </div>
+
+        {/* Invoice Number - removed as it's not in the current Invoice schema */}
+
+        {/* Amount */}
+        <div>
+          <label
+            htmlFor="amount"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Amount ($)
+          </label>
+          <Input
+            id="amount"
+            type="number"
+            step="0.01"
+            min={0}
+            value={formData.amount || ""}
+            onChange={(e) =>
+              handleInputChange("amount", parseFloat(e.target.value) || 0)
+            }
+            placeholder="e.g. 0.00"
+            className={errors.amount ? "border-red-500" : ""}
+          />
+          {errors.amount && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {errors.amount}
+            </p>
+          )}
+        </div>
+
+        {/* Issue Date */}
+        <div>
+          <label
+            htmlFor="issueDate"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Issue Date *
+          </label>
+          <Input
+            id="issueDate"
+            type="date"
+            value={formData.issueDate}
+            onChange={(e) => handleInputChange("issueDate", e.target.value)}
+            className={errors.issueDate ? "border-red-500" : ""}
+          />
+          {errors.issueDate && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {errors.issueDate}
+            </p>
+          )}
+        </div>
+
+        {/* Due Date */}
+        <div>
+          <label
+            htmlFor="dueDate"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Due Date *
+          </label>
+          <Input
+            id="dueDate"
+            type="date"
+            value={formData.dueDate}
+            onChange={(e) => handleInputChange("dueDate", e.target.value)}
+            className={errors.dueDate ? "border-red-500" : ""}
+          />
+          {errors.dueDate && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {errors.dueDate}
+            </p>
+          )}
+        </div>
+
+        {/* Subtotal Amount - removed, use amount instead */}
+
+        {/* Tax Rate */}
+        <div>
+          <label
+            htmlFor="taxRate"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Tax Rate (%)
+          </label>
+          <Input
+            id="taxRate"
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            value={formData.taxRate || ""}
+            onChange={(e) =>
+              handleInputChange("taxRate", parseFloat(e.target.value) || 0)
+            }
+            placeholder="e.g. 0.00"
+            className={errors.taxRate ? "border-red-500" : ""}
+          />
+          {errors.taxRate && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {errors.taxRate}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Calculated Amounts Display */}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+          Amount Summary
+        </h3>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+            <span className="font-medium">
+              ${calculatedAmounts.subtotal.toFixed(2)}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600 dark:text-gray-400">
+              Tax ({formData.taxRate}%):
+            </span>
+            <span className="font-medium">
+              ${calculatedAmounts.taxAmount.toFixed(2)}
+            </span>
+          </div>
+          <div className="flex justify-between border-t border-gray-200 dark:border-gray-600 pt-2">
+            <span className="font-medium text-gray-900 dark:text-gray-100">
+              Total:
+            </span>
+            <span className="font-bold text-lg text-gray-900 dark:text-gray-100">
+              ${calculatedAmounts.totalAmount.toFixed(2)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Description - removed as it's not in current Invoice schema */}
+
+      {/* Notes */}
+      <div>
+        <label
+          htmlFor="notes"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
+          Notes
+        </label>
+        <Textarea
+          id="notes"
+          value={formData.notes}
+          onChange={(e) => handleInputChange("notes", e.target.value)}
+          placeholder="Internal notes (not visible to client)"
+          rows={2}
+        />
+      </div>
+
+      {/* Terms */}
+      <div>
+        <label
+          htmlFor="terms"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
+          Terms & Conditions
+        </label>
+        <Textarea
+          id="terms"
+          value={formData.terms}
+          onChange={(e) => handleInputChange("terms", e.target.value)}
+          placeholder="Payment terms and conditions"
+          rows={3}
+        />
+      </div>
+
+      {/* Form Actions */}
+      <div className="flex justify-end space-x-3">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel || (() => router.back())}
+          disabled={isLoading}
+        >
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading
+            ? "Saving..."
+            : invoice
+            ? "Update Invoice"
+            : "Create Invoice"}
+        </Button>
       </div>
     </form>
   );
-};
+}

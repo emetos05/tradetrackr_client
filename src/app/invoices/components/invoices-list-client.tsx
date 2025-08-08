@@ -1,39 +1,39 @@
 "use client";
 import { useState } from "react";
-import { Invoice } from "../types/invoice";
+import { Invoice, InvoiceStatus } from "../types/invoice";
 import {
   getInvoiceStatusLabel,
+  getInvoiceStatusBadgeVariant,
   getClientName,
   getJobTitle,
+  formatCurrency,
+  isInvoiceOverdue,
+  getDaysUntilDue,
 } from "../../helpers/getLabel";
 import { Client } from "@/app/clients/types/client";
 import { Job } from "@/app/jobs/types/job";
 import { InvoiceForm } from "./invoice-form";
 import { InvoiceActions } from "./invoice-actions";
 import { Button } from "@/app/components/ui/button";
-import {
-  createInvoice,
-  updateInvoice,
-  deleteInvoice,
-  getInvoices,
-} from "@/app/lib/actions";
+import { Badge } from "@/app/components/ui/badge";
+import { deleteInvoice, getInvoices } from "@/app/lib/actions";
 import * as Dialog from "@radix-ui/react-dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { X } from "lucide-react";
+import { X, AlertTriangle, Calendar, DollarSign } from "lucide-react";
 import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import { InvoiceDetails } from "./invoice-details";
 
-type InvoicesListClientProps = {
+interface InvoicesListClientProps {
   initialInvoices: Invoice[];
   clients: Client[];
   jobs: Job[];
-};
+}
 
-export function InvoicesListClient({
+export const InvoicesListClient = ({
   initialInvoices,
   clients,
   jobs,
-}: InvoicesListClientProps) {
+}: InvoicesListClientProps) => {
   const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices);
   const [showForm, setShowForm] = useState(false);
   const [editInvoice, setEditInvoice] = useState<Invoice | null>(null);
@@ -45,6 +45,7 @@ export function InvoicesListClient({
   const reload = async () => {
     const latest = await getInvoices();
     setInvoices(latest);
+    return latest;
   };
 
   const filtered = invoices.filter((invoice) => {
@@ -53,47 +54,12 @@ export function InvoicesListClient({
       getClientName(clients, invoice.clientId).toLowerCase().includes(q) ||
       getJobTitle(jobs, invoice.jobId).toLowerCase().includes(q) ||
       getInvoiceStatusLabel(invoice.status).toLowerCase().includes(q) ||
-      invoice.amount.toString().includes(q)
+      invoice.amount.toString().includes(q) ||
+      invoice.totalAmount.toString().includes(q) ||
+      (invoice.notes && invoice.notes.toLowerCase().includes(q)) ||
+      (invoice.terms && invoice.terms.toLowerCase().includes(q))
     );
   });
-
-  const handleCreate = async (data: Omit<Invoice, "id">) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await createInvoice({
-        ...data,
-        issueDate: new Date(data.issueDate).toISOString(),
-        dueDate: new Date(data.dueDate).toISOString(),
-      });
-      await reload();
-      setShowForm(false);
-      setEditInvoice(null);
-    } catch (err: Error | unknown) {
-      setError((err as Error).message || "Failed to create invoice");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEdit = async (id: string, data: Omit<Invoice, "id">) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await updateInvoice(id, {
-        ...data,
-        issueDate: new Date(data.issueDate).toISOString(),
-        dueDate: new Date(data.dueDate).toISOString(),
-      });
-      await reload();
-      setShowForm(false);
-      setEditInvoice(null);
-    } catch (err: Error | unknown) {
-      setError((err as Error).message || "Failed to update invoice");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDelete = async (id: string) => {
     setLoading(true);
@@ -106,6 +72,16 @@ export function InvoicesListClient({
     } finally {
       setLoading(false);
     }
+  };
+
+  // Apply optimistic patch across list and details selection
+  const applyOptimisticPatch = (invoiceId: string, patch: Partial<Invoice>) => {
+    setInvoices((prev) =>
+      prev.map((inv) => (inv.id === invoiceId ? { ...inv, ...patch } : inv))
+    );
+    setSelectedInvoice((prev) =>
+      prev && prev.id === invoiceId ? { ...prev, ...patch } : prev
+    );
   };
 
   return (
@@ -146,21 +122,20 @@ export function InvoicesListClient({
                 </Dialog.Description>
               </VisuallyHidden>
               <InvoiceForm
-                initialInvoice={editInvoice || {}}
+                invoice={editInvoice || {}}
                 clients={clients}
                 jobs={jobs}
-                onSubmit={async (data) => {
-                  if (editInvoice && editInvoice.id) {
-                    await handleEdit(editInvoice.id, data);
-                  } else {
-                    await handleCreate(data);
-                  }
+                onSuccess={async () => {
+                  // The form handles the data submission internally
+                  // We just need to reload the list and close the form
+                  await reload();
+                  setShowForm(false);
+                  setEditInvoice(null);
                 }}
                 onCancel={() => {
                   setShowForm(false);
                   setEditInvoice(null);
                 }}
-                title={editInvoice ? "Edit Invoice" : "Add New Invoice"}
               />
               <Dialog.Close asChild>
                 <button
@@ -180,48 +155,160 @@ export function InvoicesListClient({
             No invoices found.
           </li>
         ) : (
-          filtered.map((invoice) => (
-            <li
-              key={invoice.id}
-              className="group bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition-shadow sm:max-w-4xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
-              tabIndex={0}
-              aria-label={`View details for invoice ${invoice.id}`}
-            >
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold flex items-center gap-2">
-                  <DocumentTextIcon className="w-5 h-5 text-yellow-500" />{" "}
-                  {getClientName(clients, invoice.clientId)}
+          filtered.map((invoice) => {
+            const isOverdue = isInvoiceOverdue(invoice.dueDate, invoice.status);
+            const daysUntilDue = getDaysUntilDue(invoice.dueDate);
+
+            return (
+              <li
+                key={invoice.id}
+                className={`group bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition-shadow sm:max-w-4xl flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 p-4 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900 ${
+                  isOverdue ? "border-l-4 border-l-red-500" : ""
+                }`}
+                tabIndex={0}
+                aria-label={`View details for invoice ${invoice.id}`}
+              >
+                <div className="flex-1 min-w-0 space-y-2">
+                  {/* Header with client and status */}
+                  <div className="flex items-center justify-between">
+                    <div className="font-semibold flex items-center gap-2">
+                      <DocumentTextIcon className="w-5 h-5 text-yellow-500" />
+                      <span>{getClientName(clients, invoice.clientId)}</span>
+                      {isOverdue && (
+                        <AlertTriangle className="w-4 h-4 text-red-500" />
+                      )}
+                    </div>
+                    <Badge
+                      variant={
+                        getInvoiceStatusBadgeVariant(invoice.status) as
+                          | "default"
+                          | "secondary"
+                          | "destructive"
+                          | "outline"
+                      }
+                    >
+                      {getInvoiceStatusLabel(invoice.status)}
+                    </Badge>
+                  </div>
+
+                  {/* Job Information */}
+                  {invoice.jobId && (
+                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                      <span className="font-medium">Job:</span>
+                      <span>{getJobTitle(jobs, invoice.jobId)}</span>
+                    </div>
+                  )}
+
+                  {/* Financial Information */}
+                  <div className="flex flex-wrap items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                      <DollarSign className="w-4 h-4" />
+                      <span className="font-medium">Amount:</span>
+                      <span>{formatCurrency(invoice.amount)}</span>
+                    </div>
+                    {invoice.taxRate > 0 && (
+                      <div className="text-gray-600 dark:text-gray-400">
+                        <span className="font-medium">Tax:</span>
+                        <span className="ml-1">
+                          {formatCurrency(invoice.taxAmount)} ({invoice.taxRate}
+                          %)
+                        </span>
+                      </div>
+                    )}
+                    <div className="text-gray-900 dark:text-gray-100 font-semibold">
+                      <span className="font-medium">Total:</span>
+                      <span className="ml-1">
+                        {formatCurrency(invoice.totalAmount)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Date Information */}
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      <span>
+                        Issued:{" "}
+                        {invoice.issueDate
+                          ? new Date(invoice.issueDate).toLocaleDateString()
+                          : "-"}
+                      </span>
+                    </div>
+                    <div
+                      className={`flex items-center gap-1 ${
+                        isOverdue ? "text-red-500 font-medium" : ""
+                      }`}
+                    >
+                      <Calendar className="w-3 h-3" />
+                      <span>
+                        Due:{" "}
+                        {invoice.dueDate
+                          ? new Date(invoice.dueDate).toLocaleDateString()
+                          : "-"}
+                      </span>
+                      {invoice.status !== InvoiceStatus.Paid && (
+                        <span
+                          className={`ml-1 ${
+                            isOverdue
+                              ? "text-red-500"
+                              : daysUntilDue <= 7
+                              ? "text-yellow-600"
+                              : ""
+                          }`}
+                        >
+                          (
+                          {isOverdue
+                            ? `${Math.abs(daysUntilDue)} days overdue`
+                            : `${daysUntilDue} days remaining`}
+                          )
+                        </span>
+                      )}
+                    </div>
+                    {invoice.paymentDate && (
+                      <div className="text-green-600 dark:text-green-400 flex items-center gap-1">
+                        <DollarSign className="w-3 h-3" />
+                        <span>
+                          Paid:{" "}
+                          {invoice.paymentDate
+                            ? new Date(invoice.paymentDate).toLocaleDateString()
+                            : "-"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Notes Preview */}
+                  {invoice.notes && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      <span className="font-medium">Notes:</span>
+                      <span className="ml-1">
+                        {invoice.notes.length > 100
+                          ? `${invoice.notes.substring(0, 100)}...`
+                          : invoice.notes}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                  Job: {getJobTitle(jobs, invoice.jobId)}
+
+                {/* Actions */}
+                <div className="flex gap-2 items-start">
+                  <InvoiceActions
+                    onDetails={() => setSelectedInvoice(invoice)}
+                    onEdit={() => {
+                      setEditInvoice(invoice);
+                      setShowForm(true);
+                    }}
+                    onDelete={async () => {
+                      if (invoice.id) {
+                        await handleDelete(invoice.id);
+                      }
+                    }}
+                    disabled={!invoice.id}
+                  />
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                  Status: {getInvoiceStatusLabel(invoice.status)} | Amount: $
-                  {invoice.amount}
-                </div>
-                <div className="text-xs text-gray-400">
-                  Issued:{" "}
-                  {invoice.issueDate ? invoice.issueDate.slice(0, 10) : "-"} |
-                  Due: {invoice.dueDate ? invoice.dueDate.slice(0, 10) : "-"}
-                </div>
-              </div>
-              <div className="flex gap-2 items-center">
-                <InvoiceActions
-                  onDetails={() => setSelectedInvoice(invoice)}
-                  onEdit={() => {
-                    setEditInvoice(invoice);
-                    setShowForm(true);
-                  }}
-                  onDelete={async () => {
-                    if (invoice.id) {
-                      await handleDelete(invoice.id);
-                    }
-                  }}
-                  disabled={!invoice.id}
-                />
-              </div>
-            </li>
-          ))
+              </li>
+            );
+          })
         )}
       </ul>
       {loading && <div className="text-blue-500 mt-2">Loading...</div>}
@@ -232,8 +319,19 @@ export function InvoicesListClient({
           jobs={jobs}
           isOpen={!!selectedInvoice}
           onClose={() => setSelectedInvoice(null)}
+          onInvoiceUpdate={async () => {
+            const latest = await reload();
+            // Update the selected invoice with fresh data
+            const updatedInvoice = latest.find(
+              (inv) => inv.id === selectedInvoice.id
+            );
+            if (updatedInvoice) {
+              setSelectedInvoice(updatedInvoice);
+            }
+          }}
+          onInvoiceOptimisticUpdate={applyOptimisticPatch}
         />
       )}
     </div>
   );
-}
+};
