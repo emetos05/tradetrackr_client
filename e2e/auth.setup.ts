@@ -8,12 +8,14 @@ loadEnvConfig(projectDir);
 
 const authFile = path.join(__dirname, ".auth/user.json");
 
+let allowedHosts: string[] = ["auth0.com"];
+
 setup("authenticate", async ({ page }) => {
   // Navigate to a protected route which will redirect to Auth0
   await page.goto("/dashboard");
 
   // Wait for redirect to Auth0 login page
-  await page.waitForURL((url) => url.toString().includes("auth0.com"));
+  await page.waitForURL((url) => url.toString().includes(allowedHosts[0]));
 
   await page.getByLabel(/email/i).fill(process.env.AUTH0_TEST_USERNAME || "");
   await page
