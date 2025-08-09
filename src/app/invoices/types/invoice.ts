@@ -11,7 +11,7 @@ export enum InvoiceStatus {
 export interface Invoice {
   id?: string;
   clientId: string;
-  jobId?: string;
+  jobId: string;
   status: InvoiceStatus;
   issueDate: string;
   dueDate: string;
@@ -31,7 +31,7 @@ export interface Invoice {
 // Form interfaces for creating/updating invoices
 export interface CreateInvoiceRequest {
   clientId: string;
-  jobId?: string;
+  jobId: string;
   issueDate: string;
   dueDate: string;
   amount: number;
