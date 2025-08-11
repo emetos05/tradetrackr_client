@@ -5,6 +5,13 @@ import { Client } from "@/app/clients/types/client";
 import { revalidatePath } from "next/cache";
 import { Job } from "@/app/jobs/types/job";
 import { Invoice } from "@/app/invoices/types/invoice";
+import {
+  SearchResult,
+  SearchType,
+  GlobalSearchRequest,
+  GlobalSearchResponse,
+  SearchEntity,
+} from "@/app/types/search";
 
 export async function getClients(): Promise<Client[]> {
   return await authRequest("Clients");
@@ -137,19 +144,111 @@ export async function recordInvoicePayment(
   revalidatePath(`/invoices/${id}`);
 }
 
-// Global search functionality
-export interface SearchResult {
-  type: "client" | "job" | "invoice";
-  id: string;
-  name: string;
-  href: string;
-  description?: string;
-}
-
-export async function globalSearch(query: string): Promise<SearchResult[]> {
+// Global search functionality using API endpoint
+export async function globalSearch(
+  query: string,
+  types?: SearchType[],
+  limit = 20
+): Promise<SearchResult[]> {
   if (!query || query.length < 2) {
     return [];
   }
+
+  try {
+    // Convert SearchType to SearchEntity enum values
+    const entityTypes = types?.map((type) => {
+      switch (type) {
+        case "client":
+          return SearchEntity.Clients;
+        case "job":
+          return SearchEntity.Jobs;
+        case "invoice":
+          return SearchEntity.Invoices;
+        default:
+          return SearchEntity.Clients;
+      }
+    });
+
+    const searchRequest: GlobalSearchRequest = {
+      query: query.trim(),
+      entityTypes,
+      maxResults: limit,
+    };
+
+    const response: GlobalSearchResponse = await authRequest("Search", {
+      method: "POST",
+      body: JSON.stringify(searchRequest),
+    });
+
+    const results: SearchResult[] = [];
+
+    // Transform clients
+    if (response.results.clients) {
+      response.results.clients.forEach((item) => {
+        results.push({
+          type: "client",
+          id: item.item.id,
+          name: item.item.name,
+          href: `/clients/${item.item.id}`,
+          description: item.item.email || undefined,
+          highlight: item.highlight,
+        });
+      });
+    }
+
+    // Transform jobs
+    if (response.results.jobs) {
+      response.results.jobs.forEach((item) => {
+        const description = item.item.description;
+        results.push({
+          type: "job",
+          id: item.item.id,
+          name: item.item.title,
+          href: `/jobs/${item.item.id}`,
+          description: description
+            ? description.length > 50
+              ? description.substring(0, 50) + "..."
+              : description
+            : undefined,
+          highlight: item.highlight,
+        });
+      });
+    }
+
+    // Transform invoices
+    if (response.results.invoices) {
+      response.results.invoices.forEach((item) => {
+        results.push({
+          type: "invoice",
+          id: item.item.id,
+          name: `Invoice #${item.item.id.substring(0, 8)}`,
+          href: `/invoices/${item.item.id}`,
+          description: `$${item.item.totalAmount.toFixed(2)}`,
+          highlight: item.highlight,
+        });
+      });
+    }
+
+    return results;
+  } catch (error) {
+    console.error("Global search API error:", error);
+    console.error("Search query:", query);
+    console.error("Search types:", types);
+
+    // Check if this is a 401 authentication error
+    if (error instanceof Error && error.message.includes("401")) {
+      console.warn("Search API returned 401 - possible authentication issue");
+    }
+
+    // Return client-side fallback search results
+    console.warn("Falling back to client-side search");
+    return fallbackClientSearch(query);
+  }
+}
+
+// Fallback client-side search for offline or API failure scenarios (kept for future use)
+async function fallbackClientSearch(query: string): Promise<SearchResult[]> {
+  console.warn("Using fallback client-side search");
 
   try {
     // Fetch all data concurrently
@@ -170,6 +269,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
         client.phone,
         client.address,
       ]
+        .filter(Boolean)
         .join(" ")
         .toLowerCase();
 
@@ -187,6 +287,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
     // Search jobs
     jobs.forEach((job) => {
       const searchableFields = [job.title, job.description]
+        .filter(Boolean)
         .join(" ")
         .toLowerCase();
 
@@ -200,7 +301,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
           id: job.id!,
           name: job.title + clientName,
           href: `/jobs/${job.id}`,
-          description: job.description.substring(0, 50) + "...",
+          description: job.description?.substring(0, 50) + "...",
         });
       }
     });
@@ -218,8 +319,9 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
       const searchableFields = [
         invoiceName,
         clientName,
-        invoice.amount.toString(),
+        invoice.amount?.toString(),
       ]
+        .filter(Boolean)
         .join(" ")
         .toLowerCase();
 
@@ -229,7 +331,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
           id: invoice.id!,
           name: invoiceName,
           href: `/invoices/${invoice.id}`,
-          description: `$${invoice.amount.toFixed(2)}`,
+          description: `$${invoice.amount?.toFixed(2) || "0.00"}`,
         });
       }
     });
@@ -246,7 +348,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
       })
       .slice(0, 20); // Limit to 20 results
   } catch (error) {
-    console.error("Global search error:", error);
+    console.error("Fallback search error:", error);
     return [];
   }
 }
