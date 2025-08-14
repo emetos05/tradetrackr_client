@@ -32,11 +32,10 @@ const invoiceFormSchema = z
   })
   .refine(
     (data) => {
-      const issueDate = new Date(data.issueDate).toISOString();
-      const dueDate = new Date(data.dueDate).toISOString();
+      const issueDate = new Date(data.issueDate);
+      const dueDate = new Date(data.dueDate);
       // Compare date strings directly since they are in 'YYYY-MM-DD' format
-      return data.dueDate >= data.issueDate;
-      
+      return dueDate >= issueDate;
     },
     {
       message: "Due date must be on or after issue date",
