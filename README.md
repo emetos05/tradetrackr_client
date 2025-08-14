@@ -1,6 +1,6 @@
 # TradeTrackr Client
 
-A modern Next.js application for managing clients, jobs, and invoices with authentication, built with TypeScript, Tailwind CSS, and Radix UI components.
+A modern business automation platform for tradespeople and service professionals built with Next.js, TypeScript, Tailwind CSS, Shadcn and Radix UI components.
 
 ## Tech Stack
 

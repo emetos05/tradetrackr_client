@@ -34,6 +34,7 @@ const invoiceFormSchema = z
     (data) => {
       const issueDate = new Date(data.issueDate);
       const dueDate = new Date(data.dueDate);
+      // Compare date strings directly since they are in 'YYYY-MM-DD' format
       return dueDate >= issueDate;
     },
     {
@@ -58,10 +59,8 @@ export function InvoiceForm({
   const [formData, setFormData] = useState<InvoiceFormData>({
     clientId: invoice?.clientId || "",
     jobId: invoice?.jobId || undefined,
-    issueDate:
-      invoice?.issueDate?.split("T")[0] ||
-      new Date().toISOString().split("T")[0],
-    dueDate: invoice?.dueDate?.split("T")[0] || "",
+    issueDate: invoice?.issueDate ? invoice?.issueDate.slice(0, 10) : "",
+    dueDate: invoice?.dueDate ? invoice?.dueDate.slice(0, 10) : "",
     amount: invoice?.amount || 0,
     taxRate: invoice?.taxRate || 0,
     notes: invoice?.notes || "",
@@ -131,10 +130,10 @@ export function InvoiceForm({
     try {
       const invoiceData: Omit<Invoice, "id"> = {
         clientId: formData.clientId,
-        jobId: formData.jobId || undefined,
+        jobId: formData.jobId || "",
         status: invoice?.status || InvoiceStatus.Draft,
-        issueDate: formData.issueDate,
-        dueDate: formData.dueDate,
+        issueDate: new Date(formData.issueDate).toISOString(),
+        dueDate: new Date(formData.dueDate).toISOString(),
         amount: calculatedAmounts.subtotal,
         taxRate: formData.taxRate,
         taxAmount: calculatedAmounts.taxAmount,
@@ -225,7 +224,7 @@ export function InvoiceForm({
             htmlFor="jobId"
             className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
-            Job (Optional)
+            Job *
           </label>
           <select
             id="jobId"
@@ -437,7 +436,7 @@ export function InvoiceForm({
         <Button type="submit" disabled={isLoading}>
           {isLoading
             ? "Saving..."
-            : invoice
+            : invoice?.id
             ? "Update Invoice"
             : "Create Invoice"}
         </Button>

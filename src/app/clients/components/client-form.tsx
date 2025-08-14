@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
 import { useState, useRef, useEffect } from "react";
 import { Client } from "../types/client";
 import { z } from "zod";
@@ -25,7 +26,6 @@ export const ClientForm = ({
   initialClient = {},
   onSubmit,
   onCancel,
-  title = "Client Details",
 }: ClientFormProps) => {
   const [form, setForm] = useState<ClientFormData>({
     name: initialClient.name || "",
@@ -100,189 +100,132 @@ export const ClientForm = ({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6 max-w-md mx-auto"
-      aria-labelledby="client-form-title"
-    >
-      <h2
-        id="client-form-title"
-        className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100"
-      >
-        {title}
-      </h2>
-      <div>
-        <label
-          htmlFor="name"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Name
-        </label>
-        <input
-          ref={nameInputRef}
-          id="name"
-          name="name"
-          placeholder="e.g. Jane Doe"
-          value={form.name}
-          onChange={handleChange}
-          className={`input input-bordered w-full ${
-            fieldErrors.name
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          required
-          disabled={isLoading}
-          aria-invalid={!!fieldErrors.name}
-          aria-describedby={fieldErrors.name ? "name-error" : undefined}
-        />
-        {fieldErrors.name && (
-          <div id="name-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.name}
-          </div>
-        )}
-      </div>
-      <div>
-        <label
-          htmlFor="email"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Email
-        </label>
-        <input
-          id="email"
-          name="email"
-          placeholder="e.g. jane@example.com"
-          value={form.email}
-          onChange={handleChange}
-          className={`input input-bordered w-full ${
-            fieldErrors.email
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          required
-          type="email"
-          disabled={isLoading}
-          aria-invalid={!!fieldErrors.email}
-          aria-describedby={fieldErrors.email ? "email-error" : undefined}
-        />
-        {fieldErrors.email && (
-          <div id="email-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.email}
-          </div>
-        )}
-      </div>
-      <div>
-        <label
-          htmlFor="phone"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Phone
-        </label>
-        <input
-          id="phone"
-          name="phone"
-          placeholder="e.g. (555) 123-4567"
-          value={form.phone}
-          onChange={handleChange}
-          className={`input input-bordered w-full ${
-            fieldErrors.phone
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          required
-          disabled={isLoading}
-          aria-invalid={!!fieldErrors.phone}
-          aria-describedby={fieldErrors.phone ? "phone-error" : undefined}
-        />
-        {fieldErrors.phone && (
-          <div id="phone-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.phone}
-          </div>
-        )}
-      </div>
-      <div>
-        <label
-          htmlFor="address"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Address
-        </label>
-        <input
-          id="address"
-          name="address"
-          placeholder="e.g. 123 Main St, City, Country"
-          value={form.address}
-          onChange={handleChange}
-          className={`input input-bordered w-full ${
-            fieldErrors.address
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          required
-          disabled={isLoading}
-          aria-invalid={!!fieldErrors.address}
-          aria-describedby={fieldErrors.address ? "address-error" : undefined}
-        />
-        {fieldErrors.address && (
-          <div id="address-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.address}
-          </div>
-        )}
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-6">
       {hasError && (
-        <div
-          className="text-red-600 text-sm font-medium bg-red-50 border border-red-200 rounded p-2"
-          role="alert"
-        >
-          {hasError}
+        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-md p-3">
+          <p className="text-sm text-red-600 dark:text-red-400">{hasError}</p>
         </div>
       )}
-      <div className="flex gap-2">
-        <Button
-          type="submit"
-          disabled={isLoading}
-          aria-busy={isLoading}
-          aria-label="Save client"
-        >
-          {isLoading ? (
-            <span className="flex items-center gap-2">
-              <svg
-                className="animate-spin h-4 w-4 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v8z"
-                ></path>
-              </svg>
-              Saving...
-            </span>
-          ) : (
-            "Save"
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Name *
+          </label>
+          <Input
+            ref={nameInputRef}
+            id="name"
+            name="name"
+            placeholder="e.g. Jane Doe"
+            value={form.name}
+            onChange={handleChange}
+            className={fieldErrors.name ? "border-red-500" : ""}
+            required
+            disabled={isLoading}
+          />
+          {fieldErrors.name && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.name}
+            </p>
           )}
-        </Button>
+        </div>
+
+        <div>
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Email *
+          </label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="e.g. jane@example.com"
+            value={form.email}
+            onChange={handleChange}
+            className={fieldErrors.email ? "border-red-500" : ""}
+            required
+            disabled={isLoading}
+          />
+          {fieldErrors.email && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.email}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="phone"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Phone *
+          </label>
+          <Input
+            id="phone"
+            name="phone"
+            placeholder="e.g. (555) 123-4567"
+            value={form.phone}
+            onChange={handleChange}
+            className={fieldErrors.phone ? "border-red-500" : ""}
+            required
+            disabled={isLoading}
+          />
+          {fieldErrors.phone && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.phone}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="address"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Address *
+          </label>
+          <Input
+            id="address"
+            name="address"
+            placeholder="e.g. 123 Main St, City, Country"
+            value={form.address}
+            onChange={handleChange}
+            className={fieldErrors.address ? "border-red-500" : ""}
+            required
+            disabled={isLoading}
+          />
+          {fieldErrors.address && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.address}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Form Actions */}
+      <div className="flex justify-end space-x-3">
         {onCancel && (
           <Button
             type="button"
-            variant="secondary"
+            variant="outline"
             onClick={onCancel}
             disabled={isLoading}
-            aria-label="Cancel"
           >
             Cancel
           </Button>
         )}
+        <Button type="submit" disabled={isLoading}>
+          {isLoading
+            ? "Saving..."
+            : initialClient.id
+            ? "Update Client"
+            : "Create Client"}
+        </Button>
       </div>
     </form>
   );

@@ -1,5 +1,7 @@
 "use client";
 import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Textarea } from "@/app/components/ui/textarea";
 import { useState, useRef, useEffect } from "react";
 import { Job, JobStatus } from "../types/job";
 import { Client } from "@/app/clients/types/client";
@@ -46,7 +48,6 @@ export const JobForm = ({
   clients,
   onSuccess,
   onCancel,
-  title = "Job Details",
 }: JobFormProps) => {
   const [form, setForm] = useState<JobFormData>({
     clientId: initialJob?.clientId || "",
@@ -88,6 +89,11 @@ export const JobForm = ({
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setFieldErrors((prev) => ({ ...prev, [e.target.name]: undefined }));
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setFieldErrors((prev) => ({ ...prev, [e.target.name]: undefined }));
   };
@@ -155,370 +161,277 @@ export const JobForm = ({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6 max-w-md mx-auto"
-      aria-labelledby="job-form-title"
-    >
-      <h2
-        id="job-form-title"
-        className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100"
-      >
-        {title}
-      </h2>
-      <div>
-        <label
-          htmlFor="clientId"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Client
-        </label>
-        <select
-          id="clientId"
-          name="clientId"
-          value={form.clientId}
-          onChange={handleChange}
-          className={`input input-bordered w-full ${
-            fieldErrors.clientId
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          required
-          disabled={isLoading}
-          aria-invalid={!!fieldErrors.clientId}
-          aria-describedby={fieldErrors.clientId ? "clientId-error" : undefined}
-        >
-          <option value="">Select a Client</option>
-          {clients.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        {fieldErrors.clientId && (
-          <div id="clientId-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.clientId}
-          </div>
-        )}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {hasError && (
+        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-md p-3">
+          <p className="text-sm text-red-600 dark:text-red-400">{hasError}</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label
+            htmlFor="clientId"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Client *
+          </label>
+          <select
+            id="clientId"
+            name="clientId"
+            value={form.clientId}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            required
+            disabled={isLoading}
+          >
+            <option value="">Select a client...</option>
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          {fieldErrors.clientId && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.clientId}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="status"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Status *
+          </label>
+          <select
+            id="status"
+            name="status"
+            value={form.status}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, status: Number(e.target.value) }))
+            }
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            required
+            disabled={isLoading}
+          >
+            <option value={JobStatus.NotStarted}>Not Started</option>
+            <option value={JobStatus.InProgress}>In Progress</option>
+            <option value={JobStatus.Completed}>Completed</option>
+            <option value={JobStatus.OnHold}>On Hold</option>
+            <option value={JobStatus.Cancelled}>Cancelled</option>
+          </select>
+          {fieldErrors.status && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.status}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="title"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Title *
+          </label>
+          <Input
+            ref={titleInputRef}
+            id="title"
+            name="title"
+            placeholder="e.g. Kitchen Remodel"
+            value={form.title}
+            onChange={handleChange}
+            className={fieldErrors.title ? "border-red-500" : ""}
+            required
+            disabled={isLoading}
+          />
+          {fieldErrors.title && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.title}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="hourlyRate"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Hourly Rate ($)
+          </label>
+          <Input
+            id="hourlyRate"
+            name="hourlyRate"
+            type="number"
+            min={0}
+            step={0.01}
+            placeholder="e.g. 50.00"
+            value={form.hourlyRate || ""}
+            onChange={handleNumberChange}
+            className={fieldErrors.hourlyRate ? "border-red-500" : ""}
+            required
+            disabled={isLoading}
+          />
+          {fieldErrors.hourlyRate && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.hourlyRate}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="hoursWorked"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Hours Worked
+          </label>
+          <Input
+            id="hoursWorked"
+            name="hoursWorked"
+            type="number"
+            min={0}
+            step={0.5}
+            placeholder="e.g. 40.0"
+            value={form.hoursWorked || ""}
+            onChange={handleNumberChange}
+            className={fieldErrors.hoursWorked ? "border-red-500" : ""}
+            required
+            disabled={isLoading}
+          />
+          {fieldErrors.hoursWorked && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.hoursWorked}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="materialCost"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Material Cost ($)
+          </label>
+          <Input
+            id="materialCost"
+            name="materialCost"
+            type="number"
+            min={0}
+            step={0.01}
+            placeholder="e.g. 500.00"
+            value={form.materialCost || ""}
+            onChange={handleNumberChange}
+            className={fieldErrors.materialCost ? "border-red-500" : ""}
+            required
+            disabled={isLoading}
+          />
+          {fieldErrors.materialCost && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.materialCost}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="createdAt"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Start Date *
+          </label>
+          <Input
+            id="createdAt"
+            name="createdAt"
+            type="date"
+            value={form.createdAt || ""}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, createdAt: e.target.value }))
+            }
+            className={fieldErrors.createdAt ? "border-red-500" : ""}
+            disabled={isLoading}
+            required
+          />
+          {fieldErrors.createdAt && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.createdAt}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="completedAt"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Completed Date
+          </label>
+          <Input
+            id="completedAt"
+            name="completedAt"
+            type="date"
+            value={form.completedAt || ""}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, completedAt: e.target.value }))
+            }
+            className={fieldErrors.completedAt ? "border-red-500" : ""}
+            disabled={isLoading}
+          />
+          {fieldErrors.completedAt && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.completedAt}
+            </p>
+          )}
+        </div>
       </div>
-      <div>
-        <label
-          htmlFor="title"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Title
-        </label>
-        <input
-          ref={titleInputRef}
-          id="title"
-          name="title"
-          placeholder="e.g. Kitchen Remodel"
-          value={form.title}
-          onChange={handleChange}
-          className={`input input-bordered w-full ${
-            fieldErrors.title
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          required
-          disabled={isLoading}
-          aria-invalid={!!fieldErrors.title}
-          aria-describedby={fieldErrors.title ? "title-error" : undefined}
-        />
-        {fieldErrors.title && (
-          <div id="title-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.title}
-          </div>
-        )}
-      </div>
+
       <div>
         <label
           htmlFor="description"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
-          Description
+          Description *
         </label>
-        <input
+        <Textarea
           id="description"
           name="description"
-          placeholder="e.g. Full kitchen remodel with new cabinets"
+          placeholder="e.g. Full kitchen remodel with new cabinets, countertops, and appliances"
           value={form.description}
-          onChange={handleChange}
-          className={`input input-bordered w-full ${
-            fieldErrors.description
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
+          onChange={handleTextareaChange}
+          className={fieldErrors.description ? "border-red-500" : ""}
+          rows={3}
           required
           disabled={isLoading}
-          aria-invalid={!!fieldErrors.description}
-          aria-describedby={
-            fieldErrors.description ? "description-error" : undefined
-          }
         />
         {fieldErrors.description && (
-          <div id="description-error" className="text-red-500 text-xs mt-1">
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">
             {fieldErrors.description}
-          </div>
+          </p>
         )}
       </div>
-      <div>
-        <label
-          htmlFor="status"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Status
-        </label>
-        <select
-          id="status"
-          name="status"
-          value={form.status}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, status: Number(e.target.value) }))
-          }
-          className={`input input-bordered w-full ${
-            fieldErrors.status
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          required
-          disabled={isLoading}
-          aria-invalid={!!fieldErrors.status}
-          aria-describedby={fieldErrors.status ? "status-error" : undefined}
-        >
-          <option value={JobStatus.NotStarted}>Not Started</option>
-          <option value={JobStatus.InProgress}>In Progress</option>
-          <option value={JobStatus.Completed}>Completed</option>
-          <option value={JobStatus.OnHold}>On Hold</option>
-          <option value={JobStatus.Cancelled}>Cancelled</option>
-        </select>
-        {fieldErrors.status && (
-          <div id="status-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.status}
-          </div>
-        )}
-      </div>
-      <div>
-        <label
-          htmlFor="createdAt"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Start Date
-        </label>
-        <input
-          id="createdAt"
-          name="createdAt"
-          type="date"
-          value={form.createdAt || ""}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, createdAt: e.target.value }))
-          }
-          disabled={isLoading}
-          className={`input input-bordered w-full ${
-            fieldErrors.createdAt
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          required
-          aria-invalid={!!fieldErrors.createdAt}
-          aria-describedby={
-            fieldErrors.createdAt ? "createdAt-error" : undefined
-          }
-        />
-        {fieldErrors.createdAt && (
-          <div id="createdAt-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.createdAt}
-          </div>
-        )}
-      </div>
-      <div>
-        <label
-          htmlFor="completedAt"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Completed Date
-        </label>
-        <input
-          id="completedAt"
-          name="completedAt"
-          type="date"
-          value={form.completedAt || ""}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, completedAt: e.target.value }))
-          }
-          disabled={isLoading}
-          className={`input input-bordered w-full ${
-            fieldErrors.completedAt
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          aria-invalid={!!fieldErrors.completedAt}
-          aria-describedby={
-            fieldErrors.completedAt ? "completedAt-error" : undefined
-          }
-        />
-        {fieldErrors.completedAt && (
-          <div id="completedAt-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.completedAt}
-          </div>
-        )}
-      </div>
-      <div>
-        <label
-          htmlFor="hourlyRate"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Hourly Rate ($/hr)
-        </label>
-        <input
-          id="hourlyRate"
-          name="hourlyRate"
-          type="number"
-          min={0}
-          step={0.01}
-          placeholder="e.g. 50"
-          value={form.hourlyRate || ""}
-          onChange={handleNumberChange}
-          className={`input input-bordered w-full ${
-            fieldErrors.hourlyRate
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          required
-          disabled={isLoading}
-          aria-invalid={!!fieldErrors.hourlyRate}
-          aria-describedby={
-            fieldErrors.hourlyRate ? "hourlyRate-error" : undefined
-          }
-        />
-        {fieldErrors.hourlyRate && (
-          <div id="hourlyRate-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.hourlyRate}
-          </div>
-        )}
-      </div>
-      <div>
-        <label
-          htmlFor="hoursWorked"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Hours Worked (hrs)
-        </label>
-        <input
-          id="hoursWorked"
-          name="hoursWorked"
-          type="number"
-          min={0}
-          step={0.5}
-          placeholder="e.g. 40"
-          value={form.hoursWorked || ""}
-          onChange={handleNumberChange}
-          className={`input input-bordered w-full ${
-            fieldErrors.hoursWorked
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          required
-          disabled={isLoading}
-          aria-invalid={!!fieldErrors.hoursWorked}
-          aria-describedby={
-            fieldErrors.hoursWorked ? "hoursWorked-error" : undefined
-          }
-        />
-        {fieldErrors.hoursWorked && (
-          <div id="hoursWorked-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.hoursWorked}
-          </div>
-        )}
-      </div>
-      <div>
-        <label
-          htmlFor="materialCost"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-        >
-          Material Cost ($)
-        </label>
-        <input
-          id="materialCost"
-          name="materialCost"
-          type="number"
-          min={0}
-          step={0.01}
-          placeholder="e.g. 500"
-          value={form.materialCost || ""}
-          onChange={handleNumberChange}
-          className={`input input-bordered w-full ${
-            fieldErrors.materialCost
-              ? "ring-2 ring-red-500"
-              : "focus:ring-2 focus:ring-blue-500"
-          }`}
-          required
-          disabled={isLoading}
-          aria-invalid={!!fieldErrors.materialCost}
-          aria-describedby={
-            fieldErrors.materialCost ? "materialCost-error" : undefined
-          }
-        />
-        {fieldErrors.materialCost && (
-          <div id="materialCost-error" className="text-red-500 text-xs mt-1">
-            {fieldErrors.materialCost}
-          </div>
-        )}
-      </div>
-      {hasError && (
-        <div
-          className="text-red-600 text-sm font-medium bg-red-50 border border-red-200 rounded p-2"
-          role="alert"
-        >
-          {hasError}
-        </div>
-      )}
-      <div className="flex gap-2">
-        <Button
-          type="submit"
-          disabled={isLoading}
-          aria-busy={isLoading}
-          aria-label="Save job"
-        >
-          {isLoading ? (
-            <span className="flex items-center gap-2">
-              <svg
-                className="animate-spin h-4 w-4 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v8z"
-                ></path>
-              </svg>
-              Saving...
-            </span>
-          ) : (
-            "Save"
-          )}
-        </Button>
+
+      {/* Form Actions */}
+      <div className="flex justify-end space-x-3">
         {onCancel && (
           <Button
             type="button"
-            variant="secondary"
+            variant="outline"
             onClick={onCancel}
             disabled={isLoading}
-            aria-label="Cancel"
           >
             Cancel
           </Button>
         )}
+        <Button type="submit" disabled={isLoading}>
+          {isLoading
+            ? "Saving..."
+            : initialJob?.id
+            ? "Update Job"
+            : "Create Job"}
+        </Button>
       </div>
     </form>
   );

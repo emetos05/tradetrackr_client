@@ -9,7 +9,7 @@ interface ClientActionsProps {
   onDetails: () => void;
   onEdit: () => void;
   onDelete: () => Promise<void>;
-  disabled?: boolean;
+  disabled?: boolean; 
 }
 
 export const ClientActions = ({
