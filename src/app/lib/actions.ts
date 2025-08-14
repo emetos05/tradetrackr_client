@@ -301,7 +301,11 @@ async function fallbackClientSearch(query: string): Promise<SearchResult[]> {
           id: job.id!,
           name: job.title + clientName,
           href: `/jobs/${job.id}`,
-          description: job.description?.substring(0, 50) + "...",
+          description: job.description
+            ? job.description.length > 50
+              ? job.description.substring(0, 50) + "..."
+              : job.description
+            : "",
         });
       }
     });
