@@ -10,7 +10,8 @@ export async function authRequest(endpoint: string, options: RequestInit = {}) {
       throw new Error("API_BASE_URL environment variable is not set");
     }
 
-    const accessToken = cookies().get("access_token")?.value;
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get("access_token")?.value;
 
     // Ensure API_URL ends with / and endpoint doesn't start with /
     const baseUrl = API_URL.endsWith("/") ? API_URL : `${API_URL}/`;

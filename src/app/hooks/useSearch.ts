@@ -29,7 +29,7 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
   const opts = useMemo(() => ({ ...DEFAULT_OPTIONS, ...options }), [options]);
   const [isSearching, setIsSearching] = useState(false);
   const cacheRef = useRef<Map<string, SearchCacheEntry>>(new Map());
-  const debounceTimerRef = useRef<NodeJS.Timeout>();
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const getCacheKey = useCallback((query: string, types?: SearchType[]) => {
     return `${query.toLowerCase()}:${types?.sort().join(",") || "all"}`;
